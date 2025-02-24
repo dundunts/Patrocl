@@ -41,8 +41,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import org.turter.patrocl.domain.model.menu.DishDetailed
-import org.turter.patrocl.domain.model.menu.DishModifier
+import org.turter.patrocl.domain.model.menu.deprecated.DishDetailed
+import org.turter.patrocl.domain.model.menu.deprecated.DishModifier
 import org.turter.patrocl.domain.model.order.NewOrderItem
 import org.turter.patrocl.presentation.components.DropDownMenuWithFilter
 import org.turter.patrocl.presentation.components.FloatNaturalInput
@@ -59,57 +59,57 @@ fun EditNewOrderItemDialog(
     onDismiss: () -> Unit,
     onConfirm: (orderItem: NewOrderItem) -> Unit
 ) {
-    if (expanded) {
-        var selectedDish: DishDetailed? by remember {
-            mutableStateOf(allDishes.find { it.id == orderItem?.dishId })
-        }
-        var quantity by remember { mutableFloatStateOf(orderItem?.quantity ?: 1f) }
-        val modifiers = remember {
-            mutableStateListOf(*orderItem?.modifiers?.toTypedArray() ?: emptyArray())
-        }
-
-        var isCommentCreateDialogOpened by remember { mutableStateOf(false) }
-
-        FullscreenDialog(
-            icon = { Icon(imageVector = Icons.Outlined.Info, contentDescription = "Info icon") },
-            label = "Редактирование позиции",
-            onDismiss = onDismiss,
-            onConfirm = {
-                if (selectedDish != null && orderItem != null) {
-                    orderItem.dishId = selectedDish!!.id
-                    orderItem.dishName = selectedDish!!.name
-                    orderItem.quantity = quantity
-                    orderItem.modifiers = modifiers
-                    onConfirm(orderItem)
-                    onDismiss()
-                }
-            }
-        ) {
-            DishPickerRow(
-                dishes = allDishes,
-                selectedDish = selectedDish,
-                onSelect = { selectedDish = it },
-                initQuantity = orderItem?.quantity,
-                onQuantityChange = { quantity = it }
-            )
-
-            DialogComponentsDivider()
-
-            ModifiersComponent(
-                modifier = Modifier.weight(1f),
-                allModifiers = allModifiers,
-                currentModifiers = modifiers,
-                onOpenCreateCommentDialog = { isCommentCreateDialogOpened = true }
-            )
-        }
-
-        if (isCommentCreateDialogOpened) {
-            CreateCommentDialog(
-                modifiers = modifiers,
-                onDismiss = { isCommentCreateDialogOpened = false }
-            )
-        }
-    }
+//    if (expanded) {
+//        var selectedDish: DishDetailed? by remember {
+//            mutableStateOf(allDishes.find { it.id == orderItem?.dishId })
+//        }
+//        var quantity by remember { mutableFloatStateOf(orderItem?.rkQuantity ?: 1f) }
+//        val modifiers = remember {
+//            mutableStateListOf(*orderItem?.modifiers?.toTypedArray() ?: emptyArray())
+//        }
+//
+//        var isCommentCreateDialogOpened by remember { mutableStateOf(false) }
+//
+//        FullscreenDialog(
+//            icon = { Icon(imageVector = Icons.Outlined.Info, contentDescription = "Info icon") },
+//            label = "Редактирование позиции",
+//            onDismiss = onDismiss,
+//            onConfirm = {
+//                if (selectedDish != null && orderItem != null) {
+//                    orderItem.dishId = selectedDish!!.id
+//                    orderItem.dishName = selectedDish!!.name
+//                    orderItem.rkQuantity = quantity
+//                    orderItem.modifiers = modifiers
+//                    onConfirm(orderItem)
+//                    onDismiss()
+//                }
+//            }
+//        ) {
+//            DishPickerRow(
+//                dishes = allDishes,
+//                selectedDish = selectedDish,
+//                onSelect = { selectedDish = it },
+//                initQuantity = orderItem?.rkQuantity,
+//                onQuantityChange = { quantity = it }
+//            )
+//
+//            DialogComponentsDivider()
+//
+//            ModifiersComponent(
+//                modifier = Modifier.weight(1f),
+//                allModifiers = allModifiers,
+//                currentModifiers = modifiers,
+//                onOpenCreateCommentDialog = { isCommentCreateDialogOpened = true }
+//            )
+//        }
+//
+//        if (isCommentCreateDialogOpened) {
+//            CreateCommentDialog(
+//                modifiers = modifiers,
+//                onDismiss = { isCommentCreateDialogOpened = false }
+//            )
+//        }
+//    }
 }
 
 @Composable
@@ -166,7 +166,7 @@ private fun ColumnScope.ModifiersComponent(
 
                     else -> {
                         currentModifiers[currentModifiers.indexOf(mod)] = mod.copy(
-                            quantity = mod.quantity + targetModifierQuantity
+                            count = mod.count + targetModifierQuantity
                         )
                     }
                 }
@@ -274,7 +274,7 @@ private fun ColumnScope.ModifiersComponent(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("${modifierItem.name} x${modifierItem.quantity}")
+                        Text("${modifierItem.name} x${modifierItem.count}")
                         IconButton(onClick = {
                             currentModifiers.remove(modifierItem)
                         }) {
@@ -290,91 +290,6 @@ private fun ColumnScope.ModifiersComponent(
         }
     }
 }
-
-//@OptIn(ExperimentalFoundationApi::class)
-//@Composable
-//private fun ColumnScope.CommentsComponent(
-//    modifier: Modifier = Modifier,
-//    comments: MutableList<String>,
-//    onOpenCreateCommentDialog: () -> Unit
-//) {
-//    Column(
-//        modifier = modifier,
-//        verticalArrangement = Arrangement.spacedBy(8.dp)
-//    ) {
-//        Row(
-//            modifier = Modifier.height(28.dp),
-//            verticalAlignment = Alignment.CenterVertically
-//        ) {
-//            Text("Комментарии:")
-//            Spacer(modifier = Modifier.weight(1f))
-//            IconButton(onClick = onOpenCreateCommentDialog) {
-//                Icon(
-//                    imageVector = Icons.Default.Add,
-//                    contentDescription = "Add icon"
-//                )
-//            }
-//        }
-//
-//        LazyColumn(
-//            modifier = Modifier
-//                .weight(1f)
-//                .padding(top = 4.dp),
-//            verticalArrangement = Arrangement.spacedBy(4.dp)
-//        ) {
-//            if (comments.isEmpty()) {
-//                item {
-//                    Column(
-//                        modifier = Modifier
-//                            .height(50.dp)
-//                            .animateItemPlacement()
-//                            .clickable(onClick = onOpenCreateCommentDialog),
-//                    ) {
-//                        HorizontalDivider()
-//                        Spacer(Modifier.weight(1f))
-//                        Text(
-//                            modifier = Modifier.fillMaxWidth(),
-//                            text = "Список пуст",
-//                            textAlign = TextAlign.Center
-//                        )
-//                        Spacer(Modifier.weight(1f))
-//                        HorizontalDivider()
-//                    }
-//                }
-//            }
-//            items(
-//                items = comments,
-//                key = { it }
-//            ) { comment ->
-//                Column(modifier = Modifier.animateItemPlacement()) {
-//                    HorizontalDivider()
-//                    Row(
-//                        modifier = Modifier.fillMaxWidth(),
-//                        horizontalArrangement = Arrangement.SpaceBetween,
-//                        verticalAlignment = Alignment.CenterVertically
-//                    ) {
-//                        Text(
-//                            modifier = Modifier.weight(9f),
-//                            text = comment
-//                        )
-//                        IconButton(
-//                            modifier = Modifier.weight(1f),
-//                            onClick = {
-//                                comments.remove(comment)
-//                            }
-//                        ) {
-//                            Icon(
-//                                Icons.Default.Delete,
-//                                contentDescription = "Remove"
-//                            )
-//                        }
-//                    }
-//                    HorizontalDivider()
-//                }
-//            }
-//        }
-//    }
-//}
 
 @Composable
 private fun CreateCommentDialog(

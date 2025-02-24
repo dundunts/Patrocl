@@ -4,12 +4,12 @@ import kotlinx.serialization.Serializable
 
 sealed interface OrderItemPayload {
     val dishId: String
-    val quantity: Float
+    val rkQuantity: Int
 
     @Serializable
     data class Add(
         override val dishId: String,
-        override val quantity: Float,
+        override val rkQuantity: Int,
         val modifiers: List<ModifierPayload>
     ) : OrderItemPayload
 
@@ -18,6 +18,7 @@ sealed interface OrderItemPayload {
         override val dishId: String,
         val dishCode: String,
         val dishUni: String,
-        override val quantity: Float
+        val voidId: String,
+        override val rkQuantity: Int
     ) : OrderItemPayload
 }

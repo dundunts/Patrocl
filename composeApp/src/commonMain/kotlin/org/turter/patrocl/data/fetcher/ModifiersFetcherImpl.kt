@@ -17,11 +17,14 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import org.turter.patrocl.data.local.LocalSource
-import org.turter.patrocl.data.local.entity.DishModifierLocal
-import org.turter.patrocl.data.mapper.menu.toModifierListFromLocal
+import org.turter.patrocl.data.dto.enums.SourceDataType
+import org.turter.patrocl.data.dto.source.dataversion.CompanySourceDataVersion
+import org.turter.patrocl.data.local.repository.CompanySourceDataVersionLocalRepository
+import org.turter.patrocl.data.local.repository.ModifierLocalRepository
 import org.turter.patrocl.data.mapper.menu.toModifierLocalList
-import org.turter.patrocl.data.remote.client.SourceApiClient
+import org.turter.patrocl.data.mapper.menu.toStationModifierInfoListFromLocal
+import org.turter.patrocl.data.mapper.version.toCompanySourceDataVersionLocal
+import org.turter.patrocl.data.remote.client.MenuApiClient
 import org.turter.patrocl.domain.exception.EmptyMenuDataModifiersException
 import org.turter.patrocl.domain.fetcher.ModifiersFetcher
 import org.turter.patrocl.domain.model.DataStatus
@@ -30,20 +33,21 @@ import org.turter.patrocl.domain.model.DataStatus.Initial
 import org.turter.patrocl.domain.model.DataStatus.Loading
 import org.turter.patrocl.domain.model.DataStatus.Ready
 import org.turter.patrocl.domain.model.FetchState
-import org.turter.patrocl.domain.model.menu.DishModifier
+import org.turter.patrocl.domain.model.menu.StationModifierInfo
 
 class ModifiersFetcherImpl(
-    private val sourceApiClient: SourceApiClient,
-    private val modifiersLocalSource: LocalSource<List<DishModifierLocal>>
+    private val menuApiClient: MenuApiClient,
+    private val modifiersRepository: ModifierLocalRepository,
+    private val dataVersionRepository: CompanySourceDataVersionLocalRepository
 ) : ModifiersFetcher {
     private val log = Logger.withTag("ModifiersFetcherImpl")
 
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
 
-    private val modifiersFlow = modifiersLocalSource
+    private val modifiersFlow = modifiersRepository
         .get()
         .map { res ->
-            res.map { it.toModifierListFromLocal() }
+            res.map { it.toStationModifierInfoListFromLocal() }
         }
         .distinctUntilChanged()
 
@@ -52,7 +56,7 @@ class ModifiersFetcherImpl(
     private val modifiersDataStatus = MutableStateFlow<DataStatus>(Initial)
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    private val modifiersStateFlow = flow<FetchState<List<DishModifier>>> {
+    private val modifiersStateFlow = flow<FetchState<List<StationModifierInfo>>> {
         log.d { "Creating modifiers state flow" }
         refreshModifiersFlow.emit(Unit)
         refreshModifiersFlow.collect {
@@ -66,7 +70,7 @@ class ModifiersFetcherImpl(
                     log.d { "Modifiers is present - emit current value" }
                     flowOf(current)
                 } else {
-                    flow<Result<List<DishModifier>>> {
+                    flow<Result<List<StationModifierInfo>>> {
                         log.d { "Modifiers result is failure - start updating from remote" }
                         refreshFromRemote()
                         emitAll(modifiersFlow)
@@ -93,7 +97,8 @@ class ModifiersFetcherImpl(
         initialValue = FetchState.initial()
     )
 
-    override fun getStateFlow(): StateFlow<FetchState<List<DishModifier>>> = modifiersStateFlow
+    override fun getStateFlow(): StateFlow<FetchState<List<StationModifierInfo>>> =
+        modifiersStateFlow
 
     override fun getDataStatus(): StateFlow<DataStatus> = modifiersDataStatus.asStateFlow()
 
@@ -104,16 +109,27 @@ class ModifiersFetcherImpl(
     override suspend fun refreshFromRemote() {
         log.d { "Start updating modifiers from remote" }
         modifiersDataStatus.emit(Loading)
-        sourceApiClient.getModifiers().fold(
-            onSuccess = { modifiersList ->
-                log.d { "Success fetching modifiers from remote - start replace to local data. " +
-                        "Modifiers list size: ${modifiersList.size}" }
-                modifiersLocalSource.replace(modifiersList.toModifierLocalList())
+        menuApiClient.getAvailableStationModifiersForUser().fold(
+            onSuccess = { res ->
+                val modifiers = res.modifiers
+                log.d {
+                    "Success fetching modifiers from remote - start replace to local data. " +
+                            "Modifiers list size: ${modifiers.size}"
+                }
+                modifiersRepository.replace(modifiers.toModifierLocalList())
+                dataVersionRepository.updateVersion(
+                    CompanySourceDataVersion.forModifiers(
+                        res.companyId,
+                        modifiers.size.toLong(),
+                        res.version
+                    ).toCompanySourceDataVersionLocal()
+                )
                 modifiersDataStatus.emit(Ready)
             },
             onFailure = { cause ->
                 log.e { "Fail fetching modifiers from remote - start cleanup local data" }
-                modifiersLocalSource.cleanUp()
+                modifiersRepository.cleanUp()
+                dataVersionRepository.deleteVersionFor(SourceDataType.COMPANY_STATION_MODIFIERS)
                 modifiersDataStatus.emit(Empty)
             }
         )

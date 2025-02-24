@@ -11,8 +11,12 @@ data class OrderPreviewDto(
     val tableName: String,
     val waiterCode: String,
     val waiterName: String,
-    val sum: Float,
+    val rkSum: Int,
+    val rkToPaySum: Int,
+    val rkPriceListSum: Int,
     val bill: Boolean,
+    val finished: Boolean,
     val openTime: LocalDateTime,
+    val createTime: LocalDateTime
 ) {
 }

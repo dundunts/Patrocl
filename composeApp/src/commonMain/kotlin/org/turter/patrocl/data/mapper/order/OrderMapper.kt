@@ -10,11 +10,16 @@ import org.turter.patrocl.domain.model.order.OrderPreview
 fun OrderDto.toOrder(): Order = Order(
     guid = guid,
     name = name,
-    table = Order.Table(id = table.id, code = table.code, name = table.name),
-    waiter = Order.Waiter(id = waiter.id, code = waiter.code, name = waiter.name),
+    table = table.toOrderTable(),
+    waiter = waiter.toOrderWaiter(),
+    creator = creator.toOrderWaiter(),
     openTime = openTime,
     sessions = sessions.map { it.toSession() }.toList(),
-    sum = sum
+    rkSum = rkSum,
+    rkUnpaidSum = rkUnpaidSum,
+    rkDiscountSum = rkDiscountSum,
+    paid = paid,
+    finished = finished
 )
 
 fun OrderPreviewDto.toOrderPreview(): OrderPreview = OrderPreview(
@@ -24,7 +29,7 @@ fun OrderPreviewDto.toOrderPreview(): OrderPreview = OrderPreview(
     tableName = tableName,
     waiterCode = waiterCode,
     waiterName = waiterName,
-    sum = sum,
+    rkSum = rkSum,
     bill = bill,
     openTime = openTime
 )
@@ -42,3 +47,17 @@ fun toCreateOrderPayload(
         dishList = orderItems.toOrderItemListPayload()
     )
 }
+
+fun OrderDto.Table.toOrderTable(): Order.Table = Order.Table(
+    id = id,
+    code = code,
+    name = name,
+    guid = guid
+)
+
+fun OrderDto.Waiter.toOrderWaiter(): Order.Waiter = Order.Waiter(
+    id = id,
+    code = code,
+    name = name,
+    guid = guid
+)

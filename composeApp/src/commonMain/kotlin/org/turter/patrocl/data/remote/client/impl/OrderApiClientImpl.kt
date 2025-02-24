@@ -15,6 +15,7 @@ import kotlinx.serialization.json.Json
 import org.turter.patrocl.data.dto.order.request.CreateOrderPayload
 import org.turter.patrocl.data.dto.order.request.OrderSessionPayload
 import org.turter.patrocl.data.dto.order.request.RemoveItemsFromOrderPayload
+import org.turter.patrocl.data.dto.order.request.UpdateOrderInfoPayload
 import org.turter.patrocl.data.dto.order.response.OrderDto
 import org.turter.patrocl.data.dto.order.response.OrdersListApiResponse
 import org.turter.patrocl.data.remote.client.ApiEndpoint
@@ -84,6 +85,15 @@ class OrderApiClientImpl(
     override suspend fun removeItem(payload: RemoveItemsFromOrderPayload): Result<OrderDto> =
         proceedRequest(
             action = { httpClient.post(ApiEndpoint.Order.removeItemsFromOrder()) {
+                contentType(ContentType.Application.Json)
+                setBody(payload)
+            } },
+            decoder = { Json.decodeFromString(it.body()) }
+        )
+
+    override suspend fun updateOrderInfo(payload: UpdateOrderInfoPayload): Result<Unit> =
+        proceedRequest(
+            action = { httpClient.post(ApiEndpoint.Order.updateOrderInfo()) {
                 contentType(ContentType.Application.Json)
                 setBody(payload)
             } },

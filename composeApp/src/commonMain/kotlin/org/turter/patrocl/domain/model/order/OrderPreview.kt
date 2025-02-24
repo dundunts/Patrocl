@@ -9,7 +9,7 @@ data class OrderPreview(
     val tableName: String,
     val waiterCode: String,
     val waiterName: String,
-    val sum: Float,
+    val rkSum: Int,
     val bill: Boolean,
     val openTime: LocalDateTime,
 ) {

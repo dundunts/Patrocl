@@ -36,22 +36,22 @@ class CreateStopListItemViewModel(
         MutableStateFlow<CreateStopListItemScreenState>(CreateStopListItemScreenState.Initial)
     val screenState: StateFlow<CreateStopListItemScreenState> = _screenState.asStateFlow()
 
-    init {
-        coroutineScope.launch {
-            dishFetcher.getStateFlow().collect { fetchState ->
-                _screenState.value = when (fetchState) {
-                    is FetchState.Finished -> fetchState.result.fold(
-                        onSuccess = {
-                            CreateStopListItemScreenState.Main(items = currentStopList, dishes = it)
-                        },
-                        onFailure = { CreateStopListItemScreenState.Error(ErrorType.from(it)) }
-                    )
-
-                    else -> CreateStopListItemScreenState.Loading
-                }
-            }
-        }
-    }
+//    init {
+//        coroutineScope.launch {
+//            dishFetcher.getStateFlow().collect { fetchState ->
+//                _screenState.value = when (fetchState) {
+//                    is FetchState.Finished -> fetchState.result.fold(
+//                        onSuccess = {
+//                            CreateStopListItemScreenState.Main(items = currentStopList, dishes = it)
+//                        },
+//                        onFailure = { CreateStopListItemScreenState.Error(ErrorType.from(it)) }
+//                    )
+//
+//                    else -> CreateStopListItemScreenState.Loading
+//                }
+//            }
+//        }
+//    }
 
     fun sendEvent(event: CreateStopListItemUiEvent) {
         when (event) {

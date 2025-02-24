@@ -1,6 +1,10 @@
 package org.turter.patrocl.data_mock.utils
 
-import org.turter.patrocl.domain.model.source.Table
+import org.turter.patrocl.domain.model.hall.HallInfo
+import org.turter.patrocl.domain.model.hall.HallType
+import org.turter.patrocl.domain.model.hall.HallsData
+import org.turter.patrocl.domain.model.hall.TableInfo
+import org.turter.patrocl.domain.model.hall.deprecated.Table
 
 object TableDataSupplier {
 
@@ -37,6 +41,45 @@ object TableDataSupplier {
             status = "ok",
             hall = "hall-id-root"
         )
+    )
+
+    fun createTables(hallId: String, numberOfTables: Int): List<TableInfo> {
+        return (1..numberOfTables).map { index ->
+            TableInfo(
+                id = "table-$hallId-$index",
+                rkId = "rk-${hallId}-${index}",
+                guid = "guid-${hallId}-${index}",
+                code = "code-${hallId}-${index}",
+                name = "Table $index",
+                status = "AVAILABLE",
+                hall = hallId,
+                tableGroup = "Group1"
+            )
+        }
+    }
+
+    fun createHall(id: String, rkId: String, name: String, hallType: HallType, numberOfTables: Int): HallInfo {
+        val tables = createTables(id, numberOfTables)
+        return HallInfo(
+            id = id,
+            rkId = rkId,
+            guid = "guid-$rkId",
+            code = "code-$rkId",
+            name = name,
+            status = "ACTIVE",
+            mainParentIdent = "mainParentIdent",
+            restaurant = "Restaurant Name",
+            hallType = hallType,
+            tables = tables
+        )
+    }
+
+    val mainHall = createHall("mainHall", "rk-mainHall", "Основной", HallType.MAIN_HALL, 5)
+    val verandaHall = createHall("verandaHall", "rk-verandaHall", "Веранда", HallType.NOT_SPECIFIED, 5)
+
+    val hallsData = HallsData(
+        defaultHallRkId = mainHall.rkId,
+        halls = listOf(mainHall, verandaHall)
     )
 
 }

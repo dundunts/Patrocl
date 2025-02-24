@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import org.turter.patrocl.data_mock.utils.WaiterDataSupplier
 import org.turter.patrocl.domain.model.BindStatus
 import org.turter.patrocl.domain.model.FetchState
+import org.turter.patrocl.domain.model.person.StationWaiterStatus
 import org.turter.patrocl.domain.model.person.Waiter
 import org.turter.patrocl.domain.service.WaiterService
 
@@ -17,7 +18,13 @@ class WaiterServiceMock: WaiterService {
 
     private val waiterFlow = MutableStateFlow(waiterFetchState)
 
+    private val loggedInWaitersState = FetchState.success(WaiterDataSupplier.getLoggedInWaiters())
+
+    private val loggedInWaitersFlow = MutableStateFlow(loggedInWaitersState)
+
     private val waiterBindStatus = MutableStateFlow<BindStatus>(BindStatus.Bind)
+
+    private val stationWaiterStatus = MutableStateFlow<StationWaiterStatus>(StationWaiterStatus.LoggedIn)
 
     override fun getOwnWaiterStateFlow(): StateFlow<FetchState<Waiter>> =
         waiterFlow
@@ -36,5 +43,22 @@ class WaiterServiceMock: WaiterService {
         delay(300)
         waiterFlow.value = waiterFetchState
         return Result.success(DEFAULT_WAITER)
+    }
+
+    override fun getStationOwnWaiterStatus(): StateFlow<StationWaiterStatus> {
+        return stationWaiterStatus.asStateFlow()
+    }
+
+    override suspend fun checkStationWaiterStatus() {
+        stationWaiterStatus.value = StationWaiterStatus.Loading
+    }
+
+    override fun getLoggedInWaitersInSameStation(): StateFlow<FetchState<List<Waiter>>> {
+        return loggedInWaitersFlow.asStateFlow()
+    }
+
+    override suspend fun checkLoggedInWaitersInSameStation() {
+        delay(300)
+        loggedInWaitersFlow.value = loggedInWaitersState
     }
 }

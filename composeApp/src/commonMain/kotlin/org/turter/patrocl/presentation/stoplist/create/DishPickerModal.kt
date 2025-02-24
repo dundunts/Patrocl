@@ -25,7 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import org.turter.patrocl.domain.model.menu.Dish
+import org.turter.patrocl.domain.model.menu.deprecated.Dish
 import org.turter.patrocl.domain.model.stoplist.StopListItem
 import org.turter.patrocl.presentation.components.SearchTextField
 import org.turter.patrocl.presentation.components.dialog.FullscreenDialog

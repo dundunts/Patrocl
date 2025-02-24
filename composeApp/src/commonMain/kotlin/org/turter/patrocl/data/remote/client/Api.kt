@@ -21,10 +21,18 @@ object ApiEndpoint {
 //    private val API_BASE_URL_WS = "ws://192.168.0.105:18765"
 
     object Menu {
-        fun getCategoryTree() = "$API_BASE_URL_HTTP/$SOURCE_SERVICE/menu/category-list/tree"
-        fun getModifiersGroupTree() = "$API_BASE_URL_HTTP/$SOURCE_SERVICE/menu/modifiers-groups/tree"
-        fun getDishes() = "$API_BASE_URL_HTTP/$SOURCE_SERVICE/dish/list"
-        fun getModifiers() = "$API_BASE_URL_HTTP/$SOURCE_SERVICE/modifier/list"
+        fun getAvailableDishes() = "$API_BASE_URL_HTTP/$SOURCE_SERVICE/dish/for-user/current/available"
+        fun getCategoryTree() = "$API_BASE_URL_HTTP/$SOURCE_SERVICE/category/for-user/current/tree"
+        fun getCategoryData() = "$API_BASE_URL_HTTP/$SOURCE_SERVICE/category/for-user/current/data"
+
+        fun getAvailableModifiers() = "$API_BASE_URL_HTTP/$SOURCE_SERVICE/modifier/for-user/current/available"
+        fun getModifiersGroupTree() = "$API_BASE_URL_HTTP/$SOURCE_SERVICE/modifiers-group/for-user/current/tree"
+        fun getModifiersGroupData() = "$API_BASE_URL_HTTP/$SOURCE_SERVICE/modifiers-group/for-user/current/data"
+        fun getModifiersSchemesData() = "$API_BASE_URL_HTTP/$SOURCE_SERVICE/modifier-scheme/for-user/current/data"
+    }
+
+    object OrderItemVoids {
+        fun getOrderItemVoidsData() = "$API_BASE_URL_HTTP/$SOURCE_SERVICE/order-item-void/for-user/current/data"
     }
 
     object StopList {
@@ -38,7 +46,7 @@ object ApiEndpoint {
     }
 
     object Hall {
-        fun getTables() = "$API_BASE_URL_HTTP/$SOURCE_SERVICE/table/list"
+        fun getHallsData() = "$API_BASE_URL_HTTP/$SOURCE_SERVICE/hall/for-user/current/data"
     }
 
     object Order {
@@ -48,7 +56,7 @@ object ApiEndpoint {
         fun createOrder() = "$API_BASE_URL_HTTP/$ORDER_SERVICE/order/create"
         fun addItemsToOrder() = "$API_BASE_URL_HTTP/$ORDER_SERVICE/order/session/items/add"
         fun removeItemsFromOrder() = "$API_BASE_URL_HTTP/$ORDER_SERVICE/order/session/items/remove"
-//        fun updateOrder(guid: String) = "$API_BASE_URL_HTTP/$ORDER_SERVICE/order/$guid".encodeURLPath()
+        fun updateOrderInfo() = "$API_BASE_URL_HTTP/$ORDER_SERVICE/order/update-info"
 //        fun removeItem(guid: String) = "$API_BASE_URL_HTTP/$ORDER_SERVICE/order/$guid/remove-item".encodeURLPath()
 //        fun getWebSocketOrderList() = "$API_BASE_URL_WS/$STATION_CONNECTOR/order/list/ws"
     }
@@ -59,7 +67,8 @@ object ApiEndpoint {
     }
 
     object Waiter {
-        fun getOwnWaiter() = "$API_BASE_URL_HTTP/$ORDER_SERVICE/waiter/own"
+        fun getOwnWaiter() = "$API_BASE_URL_HTTP/$SOURCE_SERVICE/waiter/for-user/current/own-waiter"
+        fun getLoggedInWaitersInSameStation() = "$API_BASE_URL_HTTP/$SOURCE_SERVICE/waiter/station/current/logged-in"
 //        fun editOwnEmployee() = "$API_BASE_URL_HTTP/$STATION_CONNECTOR/waiter/own"
     }
 }

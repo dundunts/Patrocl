@@ -2,7 +2,7 @@ package org.turter.patrocl.di
 
 import cafe.adriel.voyager.navigator.Navigator
 import org.koin.dsl.module
-import org.turter.patrocl.domain.model.menu.MenuData
+import org.turter.patrocl.domain.model.menu.deprecated.MenuData
 import org.turter.patrocl.domain.model.order.NewOrderItem
 import org.turter.patrocl.domain.model.stoplist.StopListItem
 import org.turter.patrocl.presentation.auth.AuthViewModel

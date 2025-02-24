@@ -28,7 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import org.turter.patrocl.domain.model.source.Table
+import org.turter.patrocl.domain.model.hall.deprecated.Table
 import org.turter.patrocl.presentation.components.SearchTextField
 import org.turter.patrocl.presentation.components.dialog.FullscreenDialog
 import org.turter.patrocl.ui.icons.Table_restaurant

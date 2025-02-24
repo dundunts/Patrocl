@@ -2,11 +2,13 @@ package org.turter.patrocl.domain.service
 
 import kotlinx.coroutines.flow.StateFlow
 import org.turter.patrocl.domain.model.FetchState
+import org.turter.patrocl.domain.model.hall.TableInfo
 import org.turter.patrocl.domain.model.order.NewOrderItem
 import org.turter.patrocl.domain.model.order.Order
 import org.turter.patrocl.domain.model.order.OrderPreview
 import org.turter.patrocl.domain.model.person.Waiter
-import org.turter.patrocl.domain.model.source.Table
+import org.turter.patrocl.domain.model.hall.deprecated.Table
+import org.turter.patrocl.domain.model.order.RemoveOrderItemsSession
 
 interface OrderService {
     fun getOrderFlow(guid: String): StateFlow<FetchState<Order>>
@@ -27,11 +29,17 @@ interface OrderService {
 
     suspend fun removeItemFromOrderSession(
         orderGuid: String,
-        payload: Order.Session
+        payload: RemoveOrderItemsSession
     ): Result<Order>
 
     suspend fun removeItemsFromOrderSessions(
         orderGuid: String,
-        payload: List<Order.Session>
+        payload: List<RemoveOrderItemsSession>
     ): Result<Order>
+
+    suspend fun updateOrderInfo(
+        orderGuid: String,
+        waiter: Waiter,
+        table: TableInfo
+    ): Result<Unit>
 }

@@ -1,43 +1,57 @@
 package org.turter.patrocl.data.mapper.menu
 
-import org.turter.patrocl.data.dto.source.ModifierDto
-import org.turter.patrocl.data.local.entity.DishModifierLocal
-import org.turter.patrocl.domain.model.menu.DishModifier
+import org.turter.patrocl.data.dto.source.modifier.list.CompanyStationModifierInfoDto
+import org.turter.patrocl.data.local.entity.menu.ModifierLocal
+import org.turter.patrocl.domain.model.menu.StationModifierInfo
 
-fun ModifierDto.toModifierLocal(): DishModifierLocal =
-    DishModifierLocal().let { target ->
+fun CompanyStationModifierInfoDto.toModifierLocal(): ModifierLocal =
+    ModifierLocal().let { target ->
         target.id = id
+        target.rkId = rkId
         target.guid = guid
         target.code = code
         target.name = name
         target.status = status
         target.mainParentIdent = mainParentIdent
+        target.maxOneDish = maxOneDish
+        target.useLimitedQnt = useLimitedQnt
+        target.price = price
         return@let target
     }
 
-fun List<ModifierDto>.toModifierListFromDto(): List<DishModifier> =
-    map { dto ->
-        DishModifier(
-            id = dto.id,
-            guid = dto.guid,
-            code = dto.code,
-            name = dto.name,
-            status = dto.status,
-            mainParentIdent = dto.mainParentIdent
-        )
-    }.toList()
+fun CompanyStationModifierInfoDto.toStationModifierInfo(): StationModifierInfo =
+    StationModifierInfo(
+        id = id,
+        rkId = rkId,
+        guid = guid,
+        code = code,
+        name = name,
+        status = status,
+        mainParentIdent = mainParentIdent,
+        maxOneDish = maxOneDish,
+        useLimitedQnt = useLimitedQnt,
+        price = price
+    )
 
-fun List<ModifierDto>.toModifierLocalList(): List<DishModifierLocal> =
-    map { it.toModifierLocal() }.toList()
+fun ModifierLocal.toStationModifierInfo(): StationModifierInfo =
+    StationModifierInfo(
+        id = id,
+        rkId = rkId,
+        guid = guid,
+        code = code,
+        name = name,
+        status = status,
+        mainParentIdent = mainParentIdent,
+        maxOneDish = maxOneDish,
+        useLimitedQnt = useLimitedQnt,
+        price = price
+    )
 
-fun List<DishModifierLocal>.toModifierListFromLocal(): List<DishModifier> =
-    map { dto ->
-        DishModifier(
-            id = dto.id,
-            guid = dto.guid,
-            code = dto.code,
-            name = dto.name,
-            status = dto.status,
-            mainParentIdent = dto.mainParentIdent
-        )
-    }.toList()
+fun List<CompanyStationModifierInfoDto>.toStationModifierInfoList(): List<StationModifierInfo> =
+    this.map { it.toStationModifierInfo() }.toList()
+
+fun List<CompanyStationModifierInfoDto>.toModifierLocalList(): List<ModifierLocal> =
+    this.map { it.toModifierLocal() }.toList()
+
+fun List<ModifierLocal>.toStationModifierInfoListFromLocal(): List<StationModifierInfo> =
+    this.map { it.toStationModifierInfo() }.toList()

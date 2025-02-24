@@ -81,7 +81,7 @@ fun NewOrderItemCard(
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 Text(
-                    text = "x${item.quantity}",
+                    text = "x${item.rkQuantity}",
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -91,7 +91,7 @@ fun NewOrderItemCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = " - ${mod.name} x${mod.quantity}",
+                        text = " - ${mod.name} x${mod.count}",
                         fontSize = MaterialTheme.typography.bodyLarge.fontSize
                     )
                 }
@@ -121,67 +121,67 @@ fun SavedOrderItemCard(
     onLongClick: () -> Unit = {},
     onClick: () -> Unit = {}
 ) {
-    val containerColor by animateColorAsState(
-        targetValue = if (select) MaterialTheme.colorScheme.primaryContainer
-        else MaterialTheme.colorScheme.surfaceContainerLow,
-        animationSpec = tween(durationMillis = 300)
-    )
-
-    val contentColor by animateColorAsState(
-        targetValue = if (select) MaterialTheme.colorScheme.onPrimaryContainer
-        else MaterialTheme.colorScheme.onSurfaceVariant,
-        animationSpec = tween(durationMillis = 300)
-    )
-
-    Card(
-        modifier = modifier
-            .combinedClickable(
-                enabled = enabled,
-                onLongClick = onLongClick,
-                onClick = onClick
-            )
-            .fillMaxSize(),
-        colors = CardDefaults.cardColors(
-            containerColor = containerColor,
-            contentColor = contentColor
-        ),
-        shape = RoundedCornerShape(4.dp),
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 4.dp, vertical = 6.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 10.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = item.name,
-                    fontSize = MaterialTheme.typography.bodyLarge.fontSize,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.weight(1f))
-                Text(
-                    text = "x${item.quantity}",
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            item.modifiers.map { mod ->
-                Row(
-                    modifier = Modifier.padding(start = 20.dp, end = 20.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = " - ${mod.name} x${mod.quantity}",
-                        fontSize = MaterialTheme.typography.bodyLarge.fontSize
-                    )
-                }
-            }
-        }
-    }
+//    val containerColor by animateColorAsState(
+//        targetValue = if (select) MaterialTheme.colorScheme.primaryContainer
+//        else MaterialTheme.colorScheme.surfaceContainerLow,
+//        animationSpec = tween(durationMillis = 300)
+//    )
+//
+//    val contentColor by animateColorAsState(
+//        targetValue = if (select) MaterialTheme.colorScheme.onPrimaryContainer
+//        else MaterialTheme.colorScheme.onSurfaceVariant,
+//        animationSpec = tween(durationMillis = 300)
+//    )
+//
+//    Card(
+//        modifier = modifier
+//            .combinedClickable(
+//                enabled = enabled,
+//                onLongClick = onLongClick,
+//                onClick = onClick
+//            )
+//            .fillMaxSize(),
+//        colors = CardDefaults.cardColors(
+//            containerColor = containerColor,
+//            contentColor = contentColor
+//        ),
+//        shape = RoundedCornerShape(4.dp),
+//    ) {
+//        Column(
+//            modifier = Modifier
+//                .fillMaxSize()
+//                .padding(horizontal = 4.dp, vertical = 6.dp),
+//            verticalArrangement = Arrangement.spacedBy(6.dp)
+//        ) {
+//            Row(
+//                modifier = Modifier.padding(horizontal = 10.dp),
+//                horizontalArrangement = Arrangement.SpaceEvenly,
+//                verticalAlignment = Alignment.CenterVertically
+//            ) {
+//                Text(
+//                    text = item.name,
+//                    fontSize = MaterialTheme.typography.bodyLarge.fontSize,
+//                    fontWeight = FontWeight.Bold
+//                )
+//                Spacer(modifier = Modifier.weight(1f))
+//                Text(
+//                    text = "x${item.quantity}",
+//                    fontWeight = FontWeight.Bold
+//                )
+//            }
+//            item.modifiers.map { mod ->
+//                Row(
+//                    modifier = Modifier.padding(start = 20.dp, end = 20.dp),
+//                    verticalAlignment = Alignment.CenterVertically
+//                ) {
+//                    Text(
+//                        text = " - ${mod.name} x${mod.quantity}",
+//                        fontSize = MaterialTheme.typography.bodyLarge.fontSize
+//                    )
+//                }
+//            }
+//        }
+//    }
 }
 
 @OptIn(ExperimentalFoundationApi::class)

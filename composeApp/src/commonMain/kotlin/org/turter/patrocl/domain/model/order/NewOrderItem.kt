@@ -7,14 +7,14 @@ data class NewOrderItem(
     val uuid: Uuid = uuid4(),
     var dishId: String,
     var dishName: String,
-    var quantity: Float,
+    var rkQuantity: Int,
     var modifiers: List<Modifier>
 ) {
     data class Modifier(
         val type: Type,
         val modifierId: String,
         val name: String,
-        var quantity: Int,
+        var count: Int,
         val content: String
     ) {
         enum class Type {
@@ -27,7 +27,7 @@ data class NewOrderItem(
                 type = Type.REGULAR,
                 modifierId = modifierId,
                 name = name,
-                quantity = quantity,
+                count = quantity,
                 content = ""
             )
 
@@ -35,7 +35,7 @@ data class NewOrderItem(
                 type = Type.COMMENT,
                 modifierId = "",
                 name = content,
-                quantity = 1,
+                count = 1,
                 content = content
             )
         }

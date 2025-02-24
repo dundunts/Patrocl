@@ -35,9 +35,6 @@ class StopListServiceImpl(
 
     private val checkStopListFlow = MutableSharedFlow<Unit>(replay = 1)
 
-//    private val stopListStateFlow =
-//        MutableStateFlow<FetchState<StopList.Success>>(FetchState.initial())
-
     private val stopListStateFlow = flow<FetchState<StopList.Success>> {
         checkStopListFlow.emit(Unit)
         combine(
@@ -84,36 +81,6 @@ class StopListServiceImpl(
         started = SharingStarted.Lazily,
         initialValue = FetchState.initial()
     )
-
-//    init {
-//        coroutineScope.launch {
-//            combine(
-//                checkStopListFlow,
-//                stopListApiClient.getStopListFlow(),
-//                dishes
-//            ) { _, stopListResult, dishesFetchState ->
-//                try {
-//                    val stopList = stopListResult.getOrThrow()
-//                    val dishes = dishesFetchState.takeIfSuccess()
-//                    if (dishes != null) {
-//                        stopList.toStopList(dishes).let { list ->
-//                            when(list) {
-//                                is StopList.Success -> FetchState.success(list)
-//                                is StopList.Error -> FetchState.fail(RuntimeException(list.message))
-//                            }
-//                        }
-//                    } else {
-//                        FetchState.loading()
-//                    }
-//                } catch (e: Exception) {
-//                    log.e { "Catch exception while collecting stop list flow. Exception: $e" }
-//                    FetchState.fail(e)
-//                }
-//            }.collect { newState ->
-//                stopListStateFlow.value = newState
-//            }
-//        }
-//    }
 
     override fun getStopListStateFlow(): StateFlow<FetchState<StopList.Success>> =
         stopListStateFlow

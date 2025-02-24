@@ -1,7 +1,7 @@
 package org.turter.patrocl.presentation.stoplist.create
 
 import kotlinx.datetime.LocalDateTime
-import org.turter.patrocl.domain.model.menu.Dish
+import org.turter.patrocl.domain.model.menu.deprecated.Dish
 import org.turter.patrocl.domain.model.stoplist.StopListItem
 import org.turter.patrocl.presentation.error.ErrorType
 

@@ -23,7 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import org.turter.patrocl.domain.model.order.NewOrderItem
-import org.turter.patrocl.domain.model.source.Table
+import org.turter.patrocl.domain.model.hall.deprecated.Table
 import org.turter.patrocl.ui.icons.Restaurant_menu
 import org.turter.patrocl.ui.icons.Table_restaurant
 
@@ -139,7 +139,7 @@ private fun SelectedItemTopAppBar(
                     maxLines = 1
                 )
                 Text(
-                    text = "Кол-во: ${selectedItem.quantity}",
+                    text = "Кол-во: ${selectedItem.rkQuantity}",
                     fontSize = MaterialTheme.typography.bodyLarge.fontSize,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1

@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 import org.turter.patrocl.domain.model.FetchState.Finished
 import org.turter.patrocl.domain.model.order.NewOrderItem
 import org.turter.patrocl.domain.model.order.Order
-import org.turter.patrocl.domain.model.source.Table
+import org.turter.patrocl.domain.model.hall.deprecated.Table
 import org.turter.patrocl.domain.service.MenuService
 import org.turter.patrocl.domain.service.OrderService
 import org.turter.patrocl.domain.service.TableService
@@ -80,49 +80,49 @@ class CreateOrderViewModel(
 
     val screenState = _screenState.asStateFlow()
 
-    init {
-        coroutineScope.launch {
-            combine(
-                menuService.getMenuDataStateFlow(),
-                tableService.getTablesStateFlow(),
-                waiterService.getOwnWaiterStateFlow()
-            ) { menu, tables, waiter ->
-                log.d {
-                    "Combine flows:\n " +
-                            "-Menu: $menu \n" +
-                            "-Tables: $tables \n" +
-                            "-Waiter: $waiter"
-                }
-                if (menu is Finished && tables is Finished && waiter is Finished) {
-                    try {
-                        val menuData = menu.result.getOrThrow()
-                        val tableList = tables.result.getOrThrow()
-                        val ownWaiter = waiter.result.getOrThrow()
-                        when(val currentState = _screenState.value) {
-                            is CreateOrderScreenState.Main -> currentState.copy(
-                                menuData = menuData,
-                                tables = tableList,
-                                ownWaiter = ownWaiter
-                            )
-                            else -> CreateOrderScreenState.Main(
-                                menuData = menuData,
-                                tables = tableList,
-                                ownWaiter = ownWaiter
-                            )
-                        }
-                    } catch (e: Exception) {
-                        log.e { "Catch exception in combine flows: $e" }
-                        e.printStackTrace()
-                        CreateOrderScreenState.Error(errorType = ErrorType.from(e))
-                    }
-                } else {
-                    CreateOrderScreenState.Loading
-                }
-            }.collect { newScreenState: CreateOrderScreenState ->
-                _screenState.value = newScreenState
-            }
-        }
-    }
+//    init {
+//        coroutineScope.launch {
+//            combine(
+//                menuService.getMenuTreeDataStateFlow(),
+//                tableService.getTablesStateFlow(),
+//                waiterService.getOwnWaiterStateFlow()
+//            ) { menu, tables, waiter ->
+//                log.d {
+//                    "Combine flows:\n " +
+//                            "-Menu: $menu \n" +
+//                            "-Tables: $tables \n" +
+//                            "-Waiter: $waiter"
+//                }
+//                if (menu is Finished && tables is Finished && waiter is Finished) {
+//                    try {
+//                        val menuData = menu.result.getOrThrow()
+//                        val tableList = tables.result.getOrThrow()
+//                        val ownWaiter = waiter.result.getOrThrow()
+//                        when(val currentState = _screenState.value) {
+//                            is CreateOrderScreenState.Main -> currentState.copy(
+//                                menuData = menuData,
+//                                tables = tableList,
+//                                ownWaiter = ownWaiter
+//                            )
+//                            else -> CreateOrderScreenState.Main(
+//                                menuData = menuData,
+//                                tables = tableList,
+//                                ownWaiter = ownWaiter
+//                            )
+//                        }
+//                    } catch (e: Exception) {
+//                        log.e { "Catch exception in combine flows: $e" }
+//                        e.printStackTrace()
+//                        CreateOrderScreenState.Error(errorType = ErrorType.from(e))
+//                    }
+//                } else {
+//                    CreateOrderScreenState.Loading
+//                }
+//            }.collect { newScreenState: CreateOrderScreenState ->
+//                _screenState.value = newScreenState
+//            }
+//        }
+//    }
 
     fun sendEvent(event: CreateOrderUiEvent) {
         when (event) {
@@ -170,27 +170,27 @@ class CreateOrderViewModel(
         quantity: Float = 1f,
         modifiers: List<NewOrderItem.Modifier>
     ) {
-        withMainState()?.apply {
-            val target = NewOrderItem(
-                dishId = dishId,
-                dishName = dishName,
-                quantity = quantity,
-                modifiers = modifiers
-            )
-            menuData.dishes.find { it.id == dishId }
-                ?.takeIf { it.onStop || it.remainingCount - quantity < 5 }
-                ?.let { dish ->
-                    transformMainState {
-                        it.copy(
-                            interceptedAdding = InterceptedAddingDish(
-                                target = target,
-                                warningType = AddingWarningType.of(dish.onStop, dish.remainingCount)
-                            )
-                        )
-                    }
-                }
-                ?: newOrderItems.add(target)
-        }
+//        withMainState()?.apply {
+//            val target = NewOrderItem(
+//                dishId = dishId,
+//                dishName = dishName,
+//                rkQuantity = quantity,
+//                modifiers = modifiers
+//            )
+//            menuData.dishes.find { it.id == dishId }
+//                ?.takeIf { it.onStop || it.remainingCount - quantity < 5 }
+//                ?.let { dish ->
+//                    transformMainState {
+//                        it.copy(
+//                            interceptedAdding = InterceptedAddingDish(
+//                                target = target,
+//                                warningType = AddingWarningType.of(dish.onStop, dish.remainingCount)
+//                            )
+//                        )
+//                    }
+//                }
+//                ?: newOrderItems.add(target)
+//        }
     }
 
     private fun confirmInterceptedAdding() {
@@ -210,7 +210,7 @@ class CreateOrderViewModel(
     private fun increaseQuantity(orderItem: NewOrderItem) =
         withMainState()?.newOrderItems?.let {
             val index = it.indexOf(orderItem)
-            val item = orderItem.copy(quantity = orderItem.quantity.inc())
+            val item = orderItem.copy(rkQuantity = orderItem.rkQuantity.inc())
             it[index] = item
             log.d { "Index of item to increase: $index, item: $orderItem" }
         }

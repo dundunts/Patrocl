@@ -6,64 +6,79 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
-import org.turter.patrocl.data.mapper.menu.toDetailed
 import org.turter.patrocl.data_mock.utils.MenuDataSupplier
+import org.turter.patrocl.data_mock.utils.OrderItemVoidDataSupplier
 import org.turter.patrocl.data_mock.utils.StopListDataSupplier
 import org.turter.patrocl.domain.model.DataStatus
 import org.turter.patrocl.domain.model.FetchState
 import org.turter.patrocl.domain.model.FetchState.Finished
-import org.turter.patrocl.domain.model.menu.Category
-import org.turter.patrocl.domain.model.menu.Dish
-import org.turter.patrocl.domain.model.menu.DishModifier
-import org.turter.patrocl.domain.model.menu.MenuData
-import org.turter.patrocl.domain.model.menu.ModifiersGroup
+import org.turter.patrocl.domain.model.menu.CategoriesTreeData
+import org.turter.patrocl.domain.model.menu.MenuTreeData
+import org.turter.patrocl.domain.model.menu.ModifierSchemeInfo
+import org.turter.patrocl.domain.model.menu.ModifiersGroupsTreeData
+import org.turter.patrocl.domain.model.menu.StationDishInfo
+import org.turter.patrocl.domain.model.menu.StationModifierInfo
 import org.turter.patrocl.domain.model.stoplist.StopListItem
+import org.turter.patrocl.domain.model.voids.OrderItemVoidInfo
 import org.turter.patrocl.domain.service.MenuService
 
 class MenuServiceMock : MenuService {
     private val scope = CoroutineScope(Dispatchers.Default)
 
     private val dishesFlow = flowOf(FetchState.success(MenuDataSupplier.getDishList()))
-    private val categoryFlow = flowOf(FetchState.success(MenuDataSupplier.getCategory()))
+    private val categoryFlow = flowOf(FetchState.success(MenuDataSupplier.getCategoryTree()))
     private val modifiersFlow = flowOf(FetchState.success(MenuDataSupplier.getModifierList()))
     private val modifiersGroupFlow =
-        flowOf(FetchState.success(MenuDataSupplier.getModifiersGroup()))
+        flowOf(FetchState.success(MenuDataSupplier.getModifiersGroupTree()))
+    private val modifiersSchemeFlow = flowOf(FetchState.success(MenuDataSupplier.getModifierScheme()))
+    private val orderItemVoidFlow = flowOf(FetchState.success(OrderItemVoidDataSupplier.getOrderItemsVoids()))
     private val stopListFlow = flowOf(FetchState.success(StopListDataSupplier.getStopList()))
 
     private val _menuDataStatusStateFlow = MutableStateFlow<DataStatus>(DataStatus.Initial)
 
-    private val menuStateFlow = combine(
-        dishesFlow, categoryFlow, modifiersFlow, modifiersGroupFlow, stopListFlow
-    ) { dishes, category, modifiers, modifiersGroup, stopList ->
-        if (
-            dishes is Finished
-            && category is Finished
-            && modifiers is Finished
-            && modifiersGroup is Finished
-            && stopList is Finished
-        ) {
-            try {
-                val res = FetchState.success(
-                    this.collectMenuData(
-                        rootCategory = category.result.getOrThrow(),
-                        rootModifiersGroup = modifiersGroup.result.getOrThrow(),
-                        dishes = dishes.result.getOrThrow(),
-                        modifiers = modifiers.result.getOrThrow(),
-                        stopList = stopList.result.getOrThrow().items
+    private val menuStateFlow = flow<FetchState<MenuTreeData>> {
+        org.turter.patrocl.utils.combine(
+            dishesFlow,
+            categoryFlow,
+            modifiersFlow,
+            modifiersGroupFlow,
+            modifiersSchemeFlow,
+            orderItemVoidFlow,
+            stopListFlow
+        ) { dishes, categories, modis, modiGroups, modiSchemes, voids, stopList ->
+            if (
+                categories is Finished
+                && dishes is Finished
+                && modis is Finished
+                && modiGroups is Finished
+                && modiSchemes is Finished
+                && voids is Finished
+                && stopList is Finished
+            ) {
+                try {
+                    FetchState.success(
+                        buildMenuTreeData(
+                            dishes = dishes.result.getOrThrow(),
+                            categoriesTree = categories.result.getOrThrow(),
+                            modifiers = modis.result.getOrThrow(),
+                            modifiersGroupTree = modiGroups.result.getOrThrow(),
+                            modifiersSchemes = modiSchemes.result.getOrThrow(),
+                            voids = voids.result.getOrThrow(),
+                            stopList = stopList.result.getOrThrow().items
+                        )
                     )
-                )
-                _menuDataStatusStateFlow.value = DataStatus.Ready
-                res
-            } catch (e: Throwable) {
-                _menuDataStatusStateFlow.value = DataStatus.Error(e)
-                FetchState.fail(e)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    FetchState.fail(e)
+                }
+            } else {
+                FetchState.loading()
             }
-        } else {
-            _menuDataStatusStateFlow.value = DataStatus.Loading
-            FetchState.loading()
+        }.collect { fetchState ->
+            emit(fetchState)
         }
     }.stateIn(
         scope = scope,
@@ -71,10 +86,10 @@ class MenuServiceMock : MenuService {
         initialValue = FetchState.initial()
     )
 
-    override fun getMenuDataStateFlow(): StateFlow<FetchState<MenuData>> =
+    override fun getMenuTreeDataStateFlow(): StateFlow<FetchState<MenuTreeData>> =
         menuStateFlow
 
-    override fun getMenuDataStatusStateFlow(): StateFlow<DataStatus> =
+    override fun getMenuTreeDataStatusStateFlow(): StateFlow<DataStatus> =
         _menuDataStatusStateFlow.asStateFlow()
 
     override suspend fun refreshMenu() {
@@ -85,17 +100,26 @@ class MenuServiceMock : MenuService {
 
     }
 
-    private fun collectMenuData(
-        rootCategory: Category,
-        rootModifiersGroup: ModifiersGroup,
-        dishes: List<Dish>,
-        modifiers: List<DishModifier>,
+    private fun buildMenuTreeData(
+        dishes: List<StationDishInfo>,
+        categoriesTree: CategoriesTreeData,
+        modifiers: List<StationModifierInfo>,
+        modifiersGroupTree: ModifiersGroupsTreeData,
+        modifiersSchemes: List<ModifierSchemeInfo>,
+        voids: List<OrderItemVoidInfo>,
         stopList: List<StopListItem>
-    ) = MenuData(
-        rootCategory = rootCategory.toDetailed(null, dishes, stopList),
-        rootModifiersGroup = rootModifiersGroup.toDetailed(null, modifiers),
-        dishes = dishes.map { it.toDetailed(stopList) }.toList(),
-        modifiers = modifiers
-    )
+    ): MenuTreeData {
+        return MenuTreeData(
+            rootCategoryRkId = categoriesTree.rootCategoryRkId,
+            dishRkIdMap = dishes.associateBy { it.rkId },
+            categoryRkIdMap = categoriesTree.categories.associateBy { it.rkId },
+            rootModifierGroupRkId = modifiersGroupTree.rootGroupRkId,
+            modifiersGroupRkIdMap = modifiersGroupTree.groups.associateBy { it.rkId },
+            modifiersRkIdMap = modifiers.associateBy { it.rkId },
+            modifiersSchemeRkIdMap = modifiersSchemes.associateBy { it.rkId },
+            orderItemVoids = voids,
+            stopListDishRkIdMap = stopList.associateBy { it.dishId }
+        )
+    }
 
 }

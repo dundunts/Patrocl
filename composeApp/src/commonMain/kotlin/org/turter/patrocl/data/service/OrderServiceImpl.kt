@@ -3,11 +3,13 @@ package org.turter.patrocl.data.service
 import co.touchlab.kermit.Logger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
+import org.turter.patrocl.data.dto.order.request.UpdateOrderInfoPayload
 import org.turter.patrocl.data.dto.order.response.OrdersListApiResponse
 import org.turter.patrocl.data.mapper.order.toAddItemsPayload
 import org.turter.patrocl.data.mapper.order.toCreateOrderPayload
@@ -17,11 +19,13 @@ import org.turter.patrocl.data.mapper.order.toRemoveItemsFromOrderPayload
 import org.turter.patrocl.data.remote.client.OrderApiClient
 import org.turter.patrocl.domain.model.FetchState
 import org.turter.patrocl.domain.model.Message
+import org.turter.patrocl.domain.model.hall.TableInfo
 import org.turter.patrocl.domain.model.order.NewOrderItem
 import org.turter.patrocl.domain.model.order.Order
 import org.turter.patrocl.domain.model.order.OrderPreview
 import org.turter.patrocl.domain.model.person.Waiter
-import org.turter.patrocl.domain.model.source.Table
+import org.turter.patrocl.domain.model.hall.deprecated.Table
+import org.turter.patrocl.domain.model.order.RemoveOrderItemsSession
 import org.turter.patrocl.domain.service.MessageService
 import org.turter.patrocl.domain.service.OrderService
 
@@ -69,25 +73,15 @@ class OrderServiceImpl(
         log.d { "Creating new orders flow for order with guid: $guid" }
         checkCurrentOrderFlow.emit(OrderActuator.Check)
         checkCurrentOrderFlow.collect { actuator ->
-            when(actuator) {
+            when (actuator) {
                 is OrderActuator.Check -> {
-                    emit(FetchState.loading())
-                    log.d {
-                        "Collect checkCurrentOrderFlow for order: $guid"
-                    }
-                    val result = orderApiClient.getOrderByGuid(guid).map { it.toOrder() }
-                    result.fold(
-                        onSuccess = { order ->
-                            log.d { "Get order by guid from api. Order name: ${order.name}" }
-                        },
-                        onFailure = { cause ->
-                            log.e { "Catch exception while getting order by guid: $cause" }
-                            messageService.setMessage(Message.error(cause))
-                        }
-                    )
-                    log.d { "Emit result: $result" }
-                    emit(FetchState.done(result))
+                    collectFetchOrderFromApi(guid)
                 }
+
+                is OrderActuator.CheckFor -> {
+                    if (actuator.orderGuid == guid) collectFetchOrderFromApi(guid)
+                }
+
                 is OrderActuator.Update -> {
                     val order = actuator.order
                     if (order.guid == guid) emit(FetchState.success(order))
@@ -104,8 +98,8 @@ class OrderServiceImpl(
         ordersStateFlow
 
     override suspend fun refreshOrders() = checkOrdersStateEvent.emit(Unit)
-    override suspend fun refreshCurrentOrder() = checkCurrentOrderFlow.emit(OrderActuator.Check)
 
+    override suspend fun refreshCurrentOrder() = checkCurrentOrderFlow.emit(OrderActuator.Check)
     override suspend fun createOrder(
         table: Table,
         waiter: Waiter,
@@ -158,22 +152,25 @@ class OrderServiceImpl(
 
     override suspend fun removeItemFromOrderSession(
         orderGuid: String,
-        payload: Order.Session
+        payload: RemoveOrderItemsSession
     ): Result<Order> {
-        log.d { "Start removing items: ${payload.dishes.map { it.name }}" }
+        log.d { "Start removing items: ${payload.itemsForRemove.map { it.name }}" }
         val result = orderApiClient
             .removeItem(payload = payload.toRemoveItemsFromOrderPayload(orderGuid))
             .map { it.toOrder() }
         result.fold(
             onSuccess = { order ->
-                log.d { "Success removing items: ${payload.dishes.map { it.name }}" }
+                log.d { "Success removing items: ${payload.itemsForRemove.map { it.name }}" }
                 checkCurrentOrderFlow.emit(OrderActuator.Update(order))
                 messageService.setMessage(
-                    Message.success("Removing item: ${payload.dishes.count()} is successful")
+                    Message.success(
+                        "Removing item: ${payload.itemsForRemove.count()} is successful"
+                    )
                 )
             },
             onFailure = { cause ->
-                log.e { "Failure removing items: ${payload.dishes.count()}. Exception: $cause" }
+                log.e { "Failure removing items: ${payload.itemsForRemove.count()}. " +
+                        "Exception: $cause" }
                 cause.printStackTrace()
                 messageService.setMessage(Message.error(cause))
             }
@@ -183,26 +180,33 @@ class OrderServiceImpl(
 
     override suspend fun removeItemsFromOrderSessions(
         orderGuid: String,
-        payload: List<Order.Session>
+        payload: List<RemoveOrderItemsSession>
     ): Result<Order> {
-        log.d { "Start removing items: " +
-                "${payload.flatMap { it.dishes.map { dish -> dish.name } }}" }
+        log.d {
+            "Start removing items: " +
+                    "${payload.flatMap { it.itemsForRemove.map { dish -> dish.name } }}"
+        }
         val result = orderApiClient
             .removeItem(payload = payload.toRemoveItemsFromOrderPayload(orderGuid))
             .map { it.toOrder() }
         result.fold(
             onSuccess = { order ->
-                log.d { "Success removing items: " +
-                        "${payload.flatMap { it.dishes.map { dish -> dish.name } }}" }
+                log.d {
+                    "Success removing items: " +
+                            "${payload.flatMap { it.itemsForRemove.map { dish -> dish.name } }}"
+                }
                 checkCurrentOrderFlow.emit(OrderActuator.Update(order))
                 messageService.setMessage(
                     Message.success("Removing item: " +
-                            "${payload.flatMap { it.dishes }.count()} is successful")
+                            "${payload.flatMap { it.itemsForRemove }.count()} is successful"
+                    )
                 )
             },
             onFailure = { cause ->
-                log.e { "Failure removing items: ${payload.flatMap { it.dishes }.count()}. " +
-                        "Exception: $cause" }
+                log.e {
+                    "Failure removing items: ${payload.flatMap { it.itemsForRemove }.count()}. " +
+                            "Exception: $cause"
+                }
                 cause.printStackTrace()
                 messageService.setMessage(Message.error(cause))
             }
@@ -210,8 +214,53 @@ class OrderServiceImpl(
         return result
     }
 
+    override suspend fun updateOrderInfo(
+        orderGuid: String,
+        waiter: Waiter,
+        table: TableInfo
+    ): Result<Unit> {
+        log.d { "Start updating info(waiter = $waiter, table = $table) " +
+                "for order with guid: $orderGuid" }
+        return orderApiClient.updateOrderInfo(UpdateOrderInfoPayload(
+            orderGuid = orderGuid,
+            waiterCode = waiter.code,
+            tableCode = table.code
+        )).onSuccess {
+            log.d { "Successful updating order info for order guid: $orderGuid" }
+            log.d { "Emit update info order actuator" }
+            checkCurrentOrderFlow.emit(OrderActuator.CheckFor(orderGuid))
+            messageService.setMessage(Message.success("Success updating order info"))
+        }.onFailure { cause ->
+            log.e { "Fail to update info for order guid: $orderGuid, cause: $cause" }
+            cause.printStackTrace()
+            messageService.setMessage(Message.error(cause))
+        }
+    }
+
+    private suspend fun FlowCollector<FetchState<Order>>.collectFetchOrderFromApi(
+        guid: String
+    ) {
+        emit(FetchState.loading())
+        log.d {
+            "Collect checkCurrentOrderFlow for order: $guid"
+        }
+        val result = orderApiClient.getOrderByGuid(guid).map { it.toOrder() }
+        result.fold(
+            onSuccess = { order ->
+                log.d { "Get order by guid from api. Order name: ${order.name}" }
+            },
+            onFailure = { cause ->
+                log.e { "Catch exception while getting order by guid: $cause" }
+                messageService.setMessage(Message.error(cause))
+            }
+        )
+        log.d { "Emit result: $result" }
+        emit(FetchState.done(result))
+    }
+
     private sealed class OrderActuator {
-        data object Check: OrderActuator()
-        data class Update(val order: Order): OrderActuator()
+        data object Check : OrderActuator()
+        data class CheckFor(val orderGuid: String) : OrderActuator()
+        data class Update(val order: Order) : OrderActuator()
     }
 }

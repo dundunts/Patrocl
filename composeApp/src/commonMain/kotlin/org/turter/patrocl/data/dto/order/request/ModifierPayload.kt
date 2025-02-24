@@ -7,7 +7,7 @@ import org.turter.patrocl.domain.model.order.NewOrderItem.Modifier.Type
 data class ModifierPayload(
     val type: Type,
     val modifierId: String,
-    val quantity: Int,
+    val count: Int,
     val content: String
 )
 

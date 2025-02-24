@@ -41,8 +41,8 @@ fun initKoin(
             single<TokenStore> { tokenStore }
         },
         appModule,
-        viewModelModule,
-//        dataMockModule
+//        viewModelModule,
+        dataMockModule,
         dataModule
     )
 }

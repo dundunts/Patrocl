@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flatMapLatest
@@ -17,11 +18,15 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import org.turter.patrocl.data.local.LocalSource
-import org.turter.patrocl.data.local.entity.CategoryLocal
-import org.turter.patrocl.data.mapper.menu.toCategory
-import org.turter.patrocl.data.mapper.menu.toCategoryLocal
-import org.turter.patrocl.data.remote.client.SourceApiClient
+import org.turter.patrocl.data.dto.enums.SourceDataType
+import org.turter.patrocl.data.dto.source.dataversion.CompanySourceDataVersion
+import org.turter.patrocl.data.local.repository.CategoryLocalRepository
+import org.turter.patrocl.data.local.repository.CompanySourceDataVersionLocalRepository
+import org.turter.patrocl.data.local.repository.CompanySourcesInfoLocalRepository
+import org.turter.patrocl.data.mapper.menu.toCategoryInfoList
+import org.turter.patrocl.data.mapper.menu.toCategoryLocalList
+import org.turter.patrocl.data.mapper.version.toCompanySourceDataVersionLocal
+import org.turter.patrocl.data.remote.client.MenuApiClient
 import org.turter.patrocl.domain.exception.EmptyMenuDataCategoryException
 import org.turter.patrocl.domain.fetcher.CategoryFetcher
 import org.turter.patrocl.domain.model.DataStatus
@@ -30,20 +35,30 @@ import org.turter.patrocl.domain.model.DataStatus.Initial
 import org.turter.patrocl.domain.model.DataStatus.Loading
 import org.turter.patrocl.domain.model.DataStatus.Ready
 import org.turter.patrocl.domain.model.FetchState
-import org.turter.patrocl.domain.model.menu.Category
+import org.turter.patrocl.domain.model.menu.CategoriesTreeData
+import org.turter.patrocl.domain.model.menu.CategoryInfo
 
 class CategoryFetcherImpl(
-    private val sourceApiClient: SourceApiClient,
-    private val categoryLocalSource: LocalSource<CategoryLocal>
-): CategoryFetcher {
+    private val menuApiClient: MenuApiClient,
+    private val categoryRepository: CategoryLocalRepository,
+    private val versionRepository: CompanySourceDataVersionLocalRepository,
+    private val companyInfoRepository: CompanySourcesInfoLocalRepository
+) : CategoryFetcher {
     private val log = Logger.withTag("CategoryFetcherImpl")
 
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
 
-    private val categoryFlow = categoryLocalSource
+    private val categoryFlow = categoryRepository
         .get()
         .map { res ->
-            res.map { it.toCategory() }
+            res.map { it.toCategoryInfoList() }
+        }
+        .distinctUntilChanged()
+
+    private val rootCategoryRkIdFlow = companyInfoRepository
+        .get()
+        .map { res ->
+            res.map { it.rootCategoryRkId }
         }
         .distinctUntilChanged()
 
@@ -52,36 +67,47 @@ class CategoryFetcherImpl(
     private val categoryDataStatus = MutableStateFlow<DataStatus>(Initial)
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    private val categoryTreeStateFlow = flow<FetchState<Category>> {
-        log.d { "Creating category tree state flow" }
+    private val categoryTreeStateFlow = flow<FetchState<CategoriesTreeData>> {
+        log.d { "Creating categories data state flow" }
         refreshCategoryFlow.emit(Unit)
         refreshCategoryFlow.collect {
-            log.d { "Category tree state flow - collect event" }
+            log.d { "Categories data state flow - collect event" }
             emit(FetchState.loading())
             categoryDataStatus.emit(Loading)
 
             categoryFlow.flatMapLatest { current ->
-                log.d { "Category tree state flow - latest category result: $current" }
+                log.d { "Categories data state flow - latest categories result: $current" }
                 if (current.isSuccess) {
-                    log.d { "Category is present - emit current value" }
+                    log.d { "Categories is present - emit current value" }
                     flowOf(current)
                 } else {
-                    flow<Result<Category>> {
-                        log.d { "Category result is failure - start updating from remote" }
+                    flow<Result<List<CategoryInfo>>> {
+                        log.d { "Categories result is failure - start updating from remote" }
                         refreshFromRemote()
                         emitAll(categoryFlow)
                     }
+                }
+            }.combine(rootCategoryRkIdFlow) { categoriesRes, rootRkIdRes ->
+                try {
+                    Result.success(
+                        CategoriesTreeData(
+                            rootCategoryRkId = rootRkIdRes.getOrThrow(),
+                            categories = categoriesRes.getOrThrow()
+                        )
+                    )
+                } catch (e: Exception) {
+                    Result.failure(e)
                 }
             }.collect { result ->
                 result.fold(
                     onSuccess = {
                         emit(FetchState.done(result))
-                        log.d { "Current category is present, emit data status READY" }
+                        log.d { "Current categories is present, emit data status READY" }
                         categoryDataStatus.emit(Ready)
                     },
                     onFailure = {
                         emit(FetchState.fail(EmptyMenuDataCategoryException()))
-                        log.d { "Current category is null, emit data status EMPTY" }
+                        log.d { "Current categories is null, emit data status EMPTY" }
                         categoryDataStatus.emit(Empty)
                     }
                 )
@@ -93,7 +119,7 @@ class CategoryFetcherImpl(
         initialValue = FetchState.initial()
     )
 
-    override fun getStateFlow(): StateFlow<FetchState<Category>> = categoryTreeStateFlow
+    override fun getStateFlow(): StateFlow<FetchState<CategoriesTreeData>> = categoryTreeStateFlow
 
     override fun getDataStatus(): StateFlow<DataStatus> = categoryDataStatus.asStateFlow()
 
@@ -102,18 +128,32 @@ class CategoryFetcherImpl(
     }
 
     override suspend fun refreshFromRemote() {
-        log.d { "Start updating category from remote" }
+        log.d { "Start updating categories from remote" }
         categoryDataStatus.emit(Loading)
-        sourceApiClient.getCategoryTree().fold(
-            onSuccess = { categoryDto ->
-                log.d { "Success fetching category from remote - start replace to local data. " +
-                        "CategoryDto: $categoryDto" }
-                categoryLocalSource.replace(categoryDto.toCategoryLocal())
+        menuApiClient.getCategoriesForUser().fold(
+            onSuccess = { categoryData ->
+                log.d {
+                    "Success fetching categories from remote - start replace to local data. " +
+                            "CategoryDto: $categoryData"
+                }
+                categoryRepository.replace(categoryData.categories.toCategoryLocalList())
+                versionRepository.updateVersion(
+                    CompanySourceDataVersion.forCategories(
+                        categoryData.companyId,
+                        categoryData.categories.count().toLong(),
+                        categoryData.version
+                    ).toCompanySourceDataVersionLocal()
+                )
+                companyInfoRepository.setRootCategoryRkId(
+                    categoryData.companyId,
+                    categoryData.rootCategoryRkId
+                )
                 categoryDataStatus.emit(Ready)
             },
             onFailure = { cause ->
-                log.e { "Fail fetching category from remote - start cleanup local data" }
-                categoryLocalSource.cleanUp()
+                log.e { "Fail fetching categories from remote - start cleanup local data" }
+                categoryRepository.cleanUp()
+                versionRepository.deleteVersionFor(SourceDataType.COMPANY_CATEGORIES)
                 categoryDataStatus.emit(Empty)
             }
         )

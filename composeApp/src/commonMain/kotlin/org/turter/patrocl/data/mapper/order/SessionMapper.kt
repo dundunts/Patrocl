@@ -1,10 +1,13 @@
 package org.turter.patrocl.data.mapper.order
 
+import org.turter.patrocl.data.dto.order.request.OrderItemPayload
 import org.turter.patrocl.data.dto.order.request.OrderSessionPayload
 import org.turter.patrocl.data.dto.order.request.RemoveItemsFromOrderPayload
 import org.turter.patrocl.data.dto.order.response.OrderDto
 import org.turter.patrocl.domain.model.order.NewOrderItem
 import org.turter.patrocl.domain.model.order.Order
+import org.turter.patrocl.domain.model.order.OrderItemForRemove
+import org.turter.patrocl.domain.model.order.RemoveOrderItemsSession
 
 fun OrderDto.Session.toSession() =
     Order.Session(
@@ -16,14 +19,18 @@ fun OrderDto.Session.toSession() =
         startService = startService,
         printed = printed,
         cookMins = cookMins,
-        creator = Order.Waiter(id = creator.id, code = creator.code, name = creator.name),
+        creator = creator.toOrderWaiter(),
         dishes = dishes.map { it.toDish() }.toList()
     )
 
 fun OrderDto.Dish.toDish() = Order.Dish(
     id = id,
     name = name,
-    quantity = quantity,
+    guid = guid,
+    rkQuantity = rkQuantity,
+    rkPrice = rkPrice,
+    rkAmount = rkAmount,
+    rkPriceListAmount = rkPriceListAmount,
     code = code,
     uni = uni,
     modifiers = modifiers.map { it.toModifier() }.toList()
@@ -32,7 +39,10 @@ fun OrderDto.Dish.toDish() = Order.Dish(
 fun OrderDto.Dish.Modifier.toModifier() = Order.Dish.Modifier(
     id = id,
     name = name,
-    quantity = quantity
+    guid = guid,
+    code = code,
+    count = count,
+    rkAmount = rkAmount
 )
 
 fun List<NewOrderItem>.toAddItemsPayload(orderGuid: String): OrderSessionPayload.AddDishes =
@@ -41,24 +51,26 @@ fun List<NewOrderItem>.toAddItemsPayload(orderGuid: String): OrderSessionPayload
         items = this.toOrderItemListPayload()
     )
 
-fun Order.Session.toRemoveItemsFromOrderPayload(orderGuid: String): RemoveItemsFromOrderPayload =
-    RemoveItemsFromOrderPayload(
-        orderGuid = orderGuid,
-        sessions = listOf(
-            OrderSessionPayload.RemoveDishes(
-                sessionUni = this.uni,
-                items = this.dishes.toRemoveItemsPayload()
-            )
-        )
+fun RemoveOrderItemsSession.toOrderSessionPayloadRemoveDishes(): OrderSessionPayload.RemoveDishes =
+    OrderSessionPayload.RemoveDishes(
+        sessionUni = uni,
+        items = itemsForRemove.map { it.toRemoveItemPayload() }
     )
 
-fun List<Order.Session>.toRemoveItemsFromOrderPayload(orderGuid: String): RemoveItemsFromOrderPayload =
+fun List<RemoveOrderItemsSession>.toOrderSessionPayloadRemoveDishesList()
+        : List<OrderSessionPayload.RemoveDishes> =
+    this.map { it.toOrderSessionPayloadRemoveDishes() }.toList()
+
+fun RemoveOrderItemsSession.toRemoveItemsFromOrderPayload(orderGuid: String)
+        : RemoveItemsFromOrderPayload =
     RemoveItemsFromOrderPayload(
         orderGuid = orderGuid,
-        sessions = this.map { session ->
-            OrderSessionPayload.RemoveDishes(
-                sessionUni = session.uni,
-                items = session.dishes.toRemoveItemsPayload()
-            )
-        }
+        sessions = listOf(this.toOrderSessionPayloadRemoveDishes())
+    )
+
+fun List<RemoveOrderItemsSession>.toRemoveItemsFromOrderPayload(orderGuid: String)
+        : RemoveItemsFromOrderPayload =
+    RemoveItemsFromOrderPayload(
+        orderGuid = orderGuid,
+        sessions = this.toOrderSessionPayloadRemoveDishesList()
     )

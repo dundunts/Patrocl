@@ -54,7 +54,7 @@ class ProfileViewModel(
             combine(
                 waiterService.getOwnWaiterStateFlow(),
                 employeeService.getOwnEmployeeStateFlow(),
-                menuService.getMenuDataStatusStateFlow(),
+                menuService.getMenuTreeDataStatusStateFlow(),
                 tableService.getTablesDataStatusStateFlow()
             ) { waiter, employee, menuDataStatus, tablesDataStatus ->
                 log.d { "Waiter: $waiter" }

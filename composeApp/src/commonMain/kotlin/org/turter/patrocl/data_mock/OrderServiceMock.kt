@@ -12,11 +12,13 @@ import kotlinx.coroutines.flow.stateIn
 import org.turter.patrocl.data_mock.utils.OrderDataSupplier
 import org.turter.patrocl.domain.model.FetchState
 import org.turter.patrocl.domain.model.Message
+import org.turter.patrocl.domain.model.hall.TableInfo
+import org.turter.patrocl.domain.model.hall.deprecated.Table
 import org.turter.patrocl.domain.model.order.NewOrderItem
 import org.turter.patrocl.domain.model.order.Order
 import org.turter.patrocl.domain.model.order.OrderPreview
+import org.turter.patrocl.domain.model.order.RemoveOrderItemsSession
 import org.turter.patrocl.domain.model.person.Waiter
-import org.turter.patrocl.domain.model.source.Table
 import org.turter.patrocl.domain.service.MessageService
 import org.turter.patrocl.domain.service.OrderService
 import kotlin.random.Random
@@ -88,7 +90,7 @@ class OrderServiceMock(
 
     override suspend fun removeItemFromOrderSession(
         orderGuid: String,
-        payload: Order.Session
+        payload: RemoveOrderItemsSession
     ): Result<Order> {
         delay(2000)
         messageService.setMessage(Message.success("Item removed"))
@@ -97,10 +99,20 @@ class OrderServiceMock(
 
     override suspend fun removeItemsFromOrderSessions(
         orderGuid: String,
-        payload: List<Order.Session>
+        payload: List<RemoveOrderItemsSession>
     ): Result<Order> {
         delay(2000)
         messageService.setMessage(Message.success("Items removed"))
         return Result.success(OrderDataSupplier.getOrder())
+    }
+
+    override suspend fun updateOrderInfo(
+        orderGuid: String,
+        waiter: Waiter,
+        table: TableInfo
+    ): Result<Unit> {
+        delay(2000)
+        messageService.setMessage(Message.success("Info updated"))
+        return Result.success(Unit)
     }
 }

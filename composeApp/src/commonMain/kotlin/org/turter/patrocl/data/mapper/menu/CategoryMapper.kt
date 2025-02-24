@@ -1,49 +1,58 @@
 package org.turter.patrocl.data.mapper.menu
 
 import io.realm.kotlin.ext.toRealmList
-import org.turter.patrocl.data.dto.source.CategoryDto
-import org.turter.patrocl.data.local.entity.CategoryLocal
-import org.turter.patrocl.domain.model.menu.Category
-import org.turter.patrocl.domain.model.menu.CategoryDetailed
-import org.turter.patrocl.domain.model.menu.Dish
+import org.turter.patrocl.data.dto.source.category.CategoryInfoDto
+import org.turter.patrocl.data.local.entity.menu.CategoryLocal
+import org.turter.patrocl.domain.model.menu.CategoryInfo
+import org.turter.patrocl.domain.model.menu.deprecated.Category
+import org.turter.patrocl.domain.model.menu.deprecated.CategoryDetailed
+import org.turter.patrocl.domain.model.menu.deprecated.Dish
 import org.turter.patrocl.domain.model.stoplist.StopListItem
 
-fun CategoryDto.toCategory(): Category =
-    Category(
+fun CategoryInfoDto.toCategoryInfo(): CategoryInfo =
+    CategoryInfo(
         id = id,
+        rkId = rkId,
         guid = guid,
         code = code,
         name = name,
         status = status,
         mainParentIdent = mainParentIdent,
-        childList = childList.map { it.toCategory() }.toList(),
-        dishIdList = dishIdList
+        childIds = childIds,
+        dishIds = dishIds
     )
 
-fun CategoryDto.toCategoryLocal(): CategoryLocal =
+fun CategoryInfoDto.toCategoryLocal(): CategoryLocal =
     CategoryLocal().let { target ->
         target.id = id
+        target.rkId = rkId
         target.guid = guid
         target.code = code
         target.name = name
         target.status = status
         target.mainParentIdent = mainParentIdent
-        target.childList = childList.map { it.toCategoryLocal() }.toRealmList()
-        target.dishIdList = dishIdList.toRealmList()
+        target.childIds = childIds.toRealmList()
+        target.dishIds = dishIds.toRealmList()
         return@let target
     }
 
-fun CategoryLocal.toCategory(): Category =
-    Category(
+fun List<CategoryInfoDto>.toCategoryLocalList() = this.map { it.toCategoryLocal() }.toList()
+
+fun CategoryLocal.toCategoryInfo(): CategoryInfo =
+    CategoryInfo(
         id = id,
+        rkId = rkId,
         guid = guid,
         code = code,
         name = name,
         status = status,
         mainParentIdent = mainParentIdent,
-        childList = childList.map { it.toCategory() }.toList(),
-        dishIdList = dishIdList
+        childIds = childIds.toList(),
+        dishIds = dishIds.toList()
     )
+
+fun List<CategoryLocal>.toCategoryInfoList(): List<CategoryInfo> =
+    this.map { it.toCategoryInfo() }.toList()
 
 fun Category.toDetailed(
     parent: CategoryDetailed?,

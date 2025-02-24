@@ -1,7 +1,8 @@
 package org.turter.patrocl.data.remote.client
 
-import org.turter.patrocl.data.dto.person.WaiterDto
+import org.turter.patrocl.data.dto.source.waiter.WaiterInfoDto
 
 interface WaiterApiClient {
-    suspend fun getOwnWaiter(): Result<WaiterDto>
+    suspend fun getOwnWaiterForUser(): Result<WaiterInfoDto>
+    suspend fun getLoggedInWaitersInSameStation(): Result<List<WaiterInfoDto>>
 }

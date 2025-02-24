@@ -174,7 +174,7 @@ private fun SelectedNewItemTopAppBar(
                     maxLines = 1
                 )
                 Text(
-                    text = "Кол-во: ${selectedItem.quantity}",
+                    text = "Кол-во: ${selectedItem.rkQuantity}",
                     fontSize = MaterialTheme.typography.bodyLarge.fontSize,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1

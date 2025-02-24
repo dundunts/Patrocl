@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.StateFlow
 import org.turter.patrocl.data_mock.utils.TableDataSupplier
 import org.turter.patrocl.domain.model.DataStatus
 import org.turter.patrocl.domain.model.FetchState
-import org.turter.patrocl.domain.model.source.Table
+import org.turter.patrocl.domain.model.hall.deprecated.Table
 import org.turter.patrocl.domain.service.TableService
 
 class TableServiceMock: TableService {

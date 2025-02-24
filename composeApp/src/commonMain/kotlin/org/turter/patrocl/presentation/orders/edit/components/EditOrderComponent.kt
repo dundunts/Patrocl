@@ -58,272 +58,272 @@ fun EditOrderComponent(
     vm: EditOrderViewModel,
     state: EditOrderScreenState.Main
 ) {
-    val originOrder = state.order
-    val sessions = originOrder.sessions
-    val newOrderItems = state.newOrderItems
-    val selectedNewItem = state.getSelectedNewItem()
-    val category = state.menuData.rootCategory
-    val dishes = state.menuData.dishes
-    val selected = state.selected
-
-    val navigator = LocalNavigator.currentOrThrow
-
-    val coroutineScope = rememberCoroutineScope()
-    val scaffoldState = rememberBottomSheetScaffoldState()
-
-    var isSavedItemRemoveDialogOpen by remember { mutableStateOf(false) }
-
-    val defaultTopAppBarState = EditOrderTopAppBarState.Default(
-        orderName = originOrder.name,
-        waiterName = originOrder.waiter.name,
-        onBack = { navigator.pop() },
-        onMenuOpen = { coroutineScope.launch { scaffoldState.bottomSheetState.expand() } }
-    )
-    val topAppBarState = when (selected) {
-        is Selected.None -> defaultTopAppBarState
-
-        is Selected.NewItem -> {
-            newOrderItems.find { it.uuid == selected.newItemUuid }?.let { item ->
-                EditOrderTopAppBarState.NewItemSelected(
-                    selectedItem = item,
-                    onClose = { vm.sendEvent(EditOrderUiEvent.UnselectAllItems) },
-                    onMoveUp = { vm.sendEvent(EditOrderUiEvent.MoveSelectedItemUp) },
-                    onMoveDown = { vm.sendEvent(EditOrderUiEvent.MoveSelectedItemDown) },
-//                    onInfo = { isEditNewOrderItemDialogOpen = true }
-                    onInfo = { navigator.push(EditNewOrderItemScreen(
-                        item = item,
-                        menuData = state.menuData,
-                        onSave = { vm.sendEvent(EditOrderUiEvent.CreateOrUpdateNewOrderItem(it)) },
-                        onDelete = { vm.sendEvent(EditOrderUiEvent.RemoveNewOrderItem(item)) }
-                    )) }
-                )
-            } ?: defaultTopAppBarState
-        }
-
-        is Selected.SavedItems -> {
-            selected.withSingleItem()?.let { item ->
-                val targetDish = item.dishes.first()
-                EditOrderTopAppBarState.SingleSavedItemSelected(
-                    itemName = targetDish.name,
-                    itemCount = targetDish.quantity,
-                    onClose = { vm.sendEvent(EditOrderUiEvent.UnselectAllItems) },
-                    onDelete = { isSavedItemRemoveDialogOpen = true }
-                )
-            } ?: EditOrderTopAppBarState.SavedItemsSelected(
-                selectedItemsCount = selected.items.flatMap { it.dishes }.count(),
-                onClose = { vm.sendEvent(EditOrderUiEvent.UnselectAllItems) },
-                onDelete = { isSavedItemRemoveDialogOpen = true }
-            )
-        }
-    }
-
-    val fabItems = listOf(
-        FABItem(
-            icon = Icons.Default.Check,
-            text = "Применить",
-            action = { vm.sendEvent(EditOrderUiEvent.SaveOrder) }
-        ),
-        FABItem(
-            icon = Icons.AutoMirrored.Filled.ArrowForward,
-            text = "Сохранить",
-            action = {
-                vm.sendEvent(EditOrderUiEvent.SaveOrderAndThen(action = { navigator.pop() }))
-            }
-        )
-    )
-
-    BottomSheetScaffold(
-        scaffoldState = scaffoldState,
-        sheetPeekHeight = 40.dp,
-        sheetShape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-        sheetContent = {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                MenuSelectorComponent(
-                    rootCategory = category,
-                    allDishes = dishes,
-                    onDishClick = { dish ->
-                        vm.sendEvent(
-                            EditOrderUiEvent.AddNewOrderItem(
-                                dishId = dish.id,
-                                dishName = dish.name
-                            )
-                        )
-                    }
-                )
-            }
-        },
-        topBar = { EditOrderTopAppBar(state = topAppBarState) },
-        snackbarHost = { SnackbarHost(it) }
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxHeight(
-                        if (scaffoldState.bottomSheetState.targetValue == SheetValue.Expanded
-                            && scaffoldState.bottomSheetState.currentValue == SheetValue.PartiallyExpanded
-                        ) 1f
-                        else if (scaffoldState.bottomSheetState.targetValue == SheetValue.PartiallyExpanded
-                            && scaffoldState.bottomSheetState.currentValue == SheetValue.Expanded
-                        ) 1f
-                        else if (scaffoldState.bottomSheetState.currentValue == SheetValue.Expanded) 0.5f
-                        else 1f
-                    )
-//                    .padding(horizontal = 16.dp)
-                ,
-                verticalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                item(key = "s-0") {
-                    OrderItemsGroupsDivider(
-                        modifier = Modifier
-                            .animateItem()
-                            .padding(top = 6.dp, start = 2.dp, end = 2.dp),
-                        title = "Сохраненные позиции"
-                    )
-                }
-                sessions.forEach { session ->
-                    val allSessionItemsSelected = state.getAllSelectedSavedItems()
-                        ?.flatMap { it.dishes }
-                        ?.containsAll(session.dishes)
-                        ?: false
-                    item(key = session.uni) {
-                        SessionCard(
-                            modifier = Modifier
-                                .animateItem()
-                                .padding(horizontal = 8.dp),
-                            session = session,
-                            select = allSessionItemsSelected,
-                            onLongClick = {
-                                vm.sendEvent(
-                                    if (allSessionItemsSelected) UnselectSavedOrderItems(session)
-                                    else SelectSavedItems(
-                                        session.copy(
-                                            dishes = session.dishes.filter { it.quantity > 0 }
-                                        )
-                                    )
-                                )
-                            }
-                        )
-                    }
-                    items(
-                        items = session.dishes.filter { it.quantity > 0 }.toList(),
-                        key = { it.getKey(session.uni) }
-                    ) { orderItem ->
-                        val isSelected = state.getAllSelectedSavedItems()
-                            ?.find { it.uni == session.uni }
-                            ?.dishes
-                            ?.any { it.uni == orderItem.uni }
-                            ?: false
-                        SavedOrderItemCard(
-                            modifier = Modifier
-                                .animateItem()
-                                .padding(horizontal = 16.dp),
-                            item = orderItem,
-                            select = isSelected,
-                            onLongClick = {
-                                val target = session.copy(dishes = listOf(orderItem))
-                                vm.sendEvent(
-                                    if (isSelected) UnselectSavedOrderItems(session = target)
-                                    else SelectSavedItems(session = target)
-                                )
-                            },
-                            onClick = {
-                                vm.sendEvent(
-                                    EditOrderUiEvent.AddNewOrderItem(
-                                        dishId = orderItem.id,
-                                        dishName = orderItem.name
-                                    )
-                                )
-                            }
-                        )
-                    }
-                }
-                item(key = "s-new") {
-                    OrderItemsGroupsDivider(
-                        modifier = Modifier.animateItem()
-                            .padding(horizontal = 4.dp),
-                        title = "Новые позиции"
-                    )
-                }
-                items(items = newOrderItems, key = { it.uuid }) { orderItem ->
-                    SwipeToDismissComponent(
-                        modifier = Modifier.animateItem()
-                            .padding(horizontal = 16.dp),
-                        onStartToEnd = { vm.sendEvent(EditOrderUiEvent.RemoveNewOrderItem(orderItem)) },
-                        onEndToStart = { vm.sendEvent(EditOrderUiEvent.RemoveNewOrderItem(orderItem)) }
-                    ) {
-                        NewOrderItemCard(
-                            item = orderItem,
-                            enabled = true,
-                            select = orderItem.uuid == selectedNewItem?.uuid,
-                            onLongClick = {
-                                vm.sendEvent(
-                                    EditOrderUiEvent.SelectNewOrderItem(
-                                        orderItem.uuid
-                                    )
-                                )
-                            },
-                            onClick = {
-                                vm.sendEvent(
-                                    EditOrderUiEvent.IncreaseNewOrderItemQuantity(
-                                        orderItem
-                                    )
-                                )
-                            }
-                        )
-                    }
-                }
-                item { Spacer(modifier = Modifier.height(88.dp)) }
-            }
-
-            ExpandableFAB(
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(16.dp),
-                items = fabItems
-            )
-
-        }
-    }
-
-    FullscreenLoader(isShown = state.isSaving || state.isRemoving)
-
-    state.interceptedAdding?.let { intercepted ->
-        InterceptedAddingDialog(
-            warningType = intercepted.warningType,
-            onDismiss = { vm.sendEvent(EditOrderUiEvent.RejectInterceptedAdding) },
-            onConfirm = { vm.sendEvent(EditOrderUiEvent.ConfirmInterceptedAdding) }
-        )
-    }
-
-    when (selected) {
-        is Selected.SavedItems -> {
-            selected.withSingleItem()?.let { item ->
-                val targetDish = item.dishes.first()
-                RemoveSingleOrderItemDialog(
-                    expanded = isSavedItemRemoveDialogOpen,
-                    itemName = targetDish.name,
-                    initialQuantity = targetDish.quantity,
-                    maxQuantity = targetDish.quantity,
-                    onConfirm = { vm.sendEvent(EditOrderUiEvent.RemoveSelectedSavedItem(it)) },
-                    onDismiss = { isSavedItemRemoveDialogOpen = false }
-                )
-            } ?: RemoveItemsDialog(
-                expanded = isSavedItemRemoveDialogOpen,
-                count = selected.items.flatMap { it.dishes }.count(),
-                onConfirm = { vm.sendEvent(EditOrderUiEvent.RemoveAllSelectedSavedItems) },
-                onDismiss = { isSavedItemRemoveDialogOpen = false }
-            )
-        }
-
-        else -> {}
-    }
+//    val originOrder = state.order
+//    val sessions = originOrder.sessions
+//    val newOrderItems = state.newOrderItems
+//    val selectedNewItem = state.getSelectedNewItem()
+//    val category = state.menuData.rootCategory
+//    val dishes = state.menuData.dishes
+//    val selected = state.selected
+//
+//    val navigator = LocalNavigator.currentOrThrow
+//
+//    val coroutineScope = rememberCoroutineScope()
+//    val scaffoldState = rememberBottomSheetScaffoldState()
+//
+//    var isSavedItemRemoveDialogOpen by remember { mutableStateOf(false) }
+//
+//    val defaultTopAppBarState = EditOrderTopAppBarState.Default(
+//        orderName = originOrder.name,
+//        waiterName = originOrder.waiter.name,
+//        onBack = { navigator.pop() },
+//        onMenuOpen = { coroutineScope.launch { scaffoldState.bottomSheetState.expand() } }
+//    )
+//    val topAppBarState = when (selected) {
+//        is Selected.None -> defaultTopAppBarState
+//
+//        is Selected.NewItem -> {
+//            newOrderItems.find { it.uuid == selected.newItemUuid }?.let { item ->
+//                EditOrderTopAppBarState.NewItemSelected(
+//                    selectedItem = item,
+//                    onClose = { vm.sendEvent(EditOrderUiEvent.UnselectAllItems) },
+//                    onMoveUp = { vm.sendEvent(EditOrderUiEvent.MoveSelectedItemUp) },
+//                    onMoveDown = { vm.sendEvent(EditOrderUiEvent.MoveSelectedItemDown) },
+////                    onInfo = { isEditNewOrderItemDialogOpen = true }
+//                    onInfo = { navigator.push(EditNewOrderItemScreen(
+//                        item = item,
+//                        menuData = state.menuData,
+//                        onSave = { vm.sendEvent(EditOrderUiEvent.CreateOrUpdateNewOrderItem(it)) },
+//                        onDelete = { vm.sendEvent(EditOrderUiEvent.RemoveNewOrderItem(item)) }
+//                    )) }
+//                )
+//            } ?: defaultTopAppBarState
+//        }
+//
+//        is Selected.SavedItems -> {
+//            selected.withSingleItem()?.let { item ->
+//                val targetDish = item.dishes.first()
+//                EditOrderTopAppBarState.SingleSavedItemSelected(
+//                    itemName = targetDish.name,
+//                    itemCount = targetDish.quantity,
+//                    onClose = { vm.sendEvent(EditOrderUiEvent.UnselectAllItems) },
+//                    onDelete = { isSavedItemRemoveDialogOpen = true }
+//                )
+//            } ?: EditOrderTopAppBarState.SavedItemsSelected(
+//                selectedItemsCount = selected.items.flatMap { it.dishes }.count(),
+//                onClose = { vm.sendEvent(EditOrderUiEvent.UnselectAllItems) },
+//                onDelete = { isSavedItemRemoveDialogOpen = true }
+//            )
+//        }
+//    }
+//
+//    val fabItems = listOf(
+//        FABItem(
+//            icon = Icons.Default.Check,
+//            text = "Применить",
+//            action = { vm.sendEvent(EditOrderUiEvent.SaveOrder) }
+//        ),
+//        FABItem(
+//            icon = Icons.AutoMirrored.Filled.ArrowForward,
+//            text = "Сохранить",
+//            action = {
+//                vm.sendEvent(EditOrderUiEvent.SaveOrderAndThen(action = { navigator.pop() }))
+//            }
+//        )
+//    )
+//
+//    BottomSheetScaffold(
+//        scaffoldState = scaffoldState,
+//        sheetPeekHeight = 40.dp,
+//        sheetShape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
+//        sheetContent = {
+//            Column(
+//                modifier = Modifier.fillMaxWidth(),
+//                horizontalAlignment = Alignment.CenterHorizontally
+//            ) {
+//                MenuSelectorComponent(
+//                    rootCategory = category,
+//                    allDishes = dishes,
+//                    onDishClick = { dish ->
+//                        vm.sendEvent(
+//                            EditOrderUiEvent.AddNewOrderItem(
+//                                dishId = dish.id,
+//                                dishName = dish.name
+//                            )
+//                        )
+//                    }
+//                )
+//            }
+//        },
+//        topBar = { EditOrderTopAppBar(state = topAppBarState) },
+//        snackbarHost = { SnackbarHost(it) }
+//    ) { innerPadding ->
+//        Box(
+//            modifier = Modifier
+//                .fillMaxSize()
+//                .padding(innerPadding)
+//        ) {
+//            LazyColumn(
+//                modifier = Modifier
+//                    .fillMaxHeight(
+//                        if (scaffoldState.bottomSheetState.targetValue == SheetValue.Expanded
+//                            && scaffoldState.bottomSheetState.currentValue == SheetValue.PartiallyExpanded
+//                        ) 1f
+//                        else if (scaffoldState.bottomSheetState.targetValue == SheetValue.PartiallyExpanded
+//                            && scaffoldState.bottomSheetState.currentValue == SheetValue.Expanded
+//                        ) 1f
+//                        else if (scaffoldState.bottomSheetState.currentValue == SheetValue.Expanded) 0.5f
+//                        else 1f
+//                    )
+////                    .padding(horizontal = 16.dp)
+//                ,
+//                verticalArrangement = Arrangement.spacedBy(6.dp)
+//            ) {
+//                item(key = "s-0") {
+//                    OrderItemsGroupsDivider(
+//                        modifier = Modifier
+//                            .animateItem()
+//                            .padding(top = 6.dp, start = 2.dp, end = 2.dp),
+//                        title = "Сохраненные позиции"
+//                    )
+//                }
+//                sessions.forEach { session ->
+//                    val allSessionItemsSelected = state.getAllSelectedSavedItems()
+//                        ?.flatMap { it.dishes }
+//                        ?.containsAll(session.dishes)
+//                        ?: false
+//                    item(key = session.uni) {
+//                        SessionCard(
+//                            modifier = Modifier
+//                                .animateItem()
+//                                .padding(horizontal = 8.dp),
+//                            session = session,
+//                            select = allSessionItemsSelected,
+//                            onLongClick = {
+//                                vm.sendEvent(
+//                                    if (allSessionItemsSelected) UnselectSavedOrderItems(session)
+//                                    else SelectSavedItems(
+//                                        session.copy(
+//                                            dishes = session.dishes.filter { it.quantity > 0 }
+//                                        )
+//                                    )
+//                                )
+//                            }
+//                        )
+//                    }
+//                    items(
+//                        items = session.dishes.filter { it.quantity > 0 }.toList(),
+//                        key = { it.getKey(session.uni) }
+//                    ) { orderItem ->
+//                        val isSelected = state.getAllSelectedSavedItems()
+//                            ?.find { it.uni == session.uni }
+//                            ?.dishes
+//                            ?.any { it.uni == orderItem.uni }
+//                            ?: false
+//                        SavedOrderItemCard(
+//                            modifier = Modifier
+//                                .animateItem()
+//                                .padding(horizontal = 16.dp),
+//                            item = orderItem,
+//                            select = isSelected,
+//                            onLongClick = {
+//                                val target = session.copy(dishes = listOf(orderItem))
+//                                vm.sendEvent(
+//                                    if (isSelected) UnselectSavedOrderItems(session = target)
+//                                    else SelectSavedItems(session = target)
+//                                )
+//                            },
+//                            onClick = {
+//                                vm.sendEvent(
+//                                    EditOrderUiEvent.AddNewOrderItem(
+//                                        dishId = orderItem.id,
+//                                        dishName = orderItem.name
+//                                    )
+//                                )
+//                            }
+//                        )
+//                    }
+//                }
+//                item(key = "s-new") {
+//                    OrderItemsGroupsDivider(
+//                        modifier = Modifier.animateItem()
+//                            .padding(horizontal = 4.dp),
+//                        title = "Новые позиции"
+//                    )
+//                }
+//                items(items = newOrderItems, key = { it.uuid }) { orderItem ->
+//                    SwipeToDismissComponent(
+//                        modifier = Modifier.animateItem()
+//                            .padding(horizontal = 16.dp),
+//                        onStartToEnd = { vm.sendEvent(EditOrderUiEvent.RemoveNewOrderItem(orderItem)) },
+//                        onEndToStart = { vm.sendEvent(EditOrderUiEvent.RemoveNewOrderItem(orderItem)) }
+//                    ) {
+//                        NewOrderItemCard(
+//                            item = orderItem,
+//                            enabled = true,
+//                            select = orderItem.uuid == selectedNewItem?.uuid,
+//                            onLongClick = {
+//                                vm.sendEvent(
+//                                    EditOrderUiEvent.SelectNewOrderItem(
+//                                        orderItem.uuid
+//                                    )
+//                                )
+//                            },
+//                            onClick = {
+//                                vm.sendEvent(
+//                                    EditOrderUiEvent.IncreaseNewOrderItemQuantity(
+//                                        orderItem
+//                                    )
+//                                )
+//                            }
+//                        )
+//                    }
+//                }
+//                item { Spacer(modifier = Modifier.height(88.dp)) }
+//            }
+//
+//            ExpandableFAB(
+//                modifier = Modifier
+//                    .align(Alignment.BottomEnd)
+//                    .padding(16.dp),
+//                items = fabItems
+//            )
+//
+//        }
+//    }
+//
+//    FullscreenLoader(isShown = state.isSaving || state.isRemoving)
+//
+//    state.interceptedAdding?.let { intercepted ->
+//        InterceptedAddingDialog(
+//            warningType = intercepted.warningType,
+//            onDismiss = { vm.sendEvent(EditOrderUiEvent.RejectInterceptedAdding) },
+//            onConfirm = { vm.sendEvent(EditOrderUiEvent.ConfirmInterceptedAdding) }
+//        )
+//    }
+//
+//    when (selected) {
+//        is Selected.SavedItems -> {
+//            selected.withSingleItem()?.let { item ->
+//                val targetDish = item.dishes.first()
+//                RemoveSingleOrderItemDialog(
+//                    expanded = isSavedItemRemoveDialogOpen,
+//                    itemName = targetDish.name,
+//                    initialQuantity = targetDish.quantity,
+//                    maxQuantity = targetDish.quantity,
+//                    onConfirm = { vm.sendEvent(EditOrderUiEvent.RemoveSelectedSavedItem(it)) },
+//                    onDismiss = { isSavedItemRemoveDialogOpen = false }
+//                )
+//            } ?: RemoveItemsDialog(
+//                expanded = isSavedItemRemoveDialogOpen,
+//                count = selected.items.flatMap { it.dishes }.count(),
+//                onConfirm = { vm.sendEvent(EditOrderUiEvent.RemoveAllSelectedSavedItems) },
+//                onDismiss = { isSavedItemRemoveDialogOpen = false }
+//            )
+//        }
+//
+//        else -> {}
+//    }
 }
 
 private fun Order.Dish.getKey(sessionUni: String) = "$sessionUni-$uni"

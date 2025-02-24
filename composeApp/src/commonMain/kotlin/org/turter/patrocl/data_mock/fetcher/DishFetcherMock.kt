@@ -12,12 +12,13 @@ import org.turter.patrocl.data_mock.utils.MenuDataSupplier
 import org.turter.patrocl.domain.fetcher.DishFetcher
 import org.turter.patrocl.domain.model.DataStatus
 import org.turter.patrocl.domain.model.FetchState
-import org.turter.patrocl.domain.model.menu.Dish
+import org.turter.patrocl.domain.model.menu.StationDishInfo
+import org.turter.patrocl.domain.model.menu.deprecated.Dish
 
 class DishFetcherMock: DishFetcher {
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
-    override fun getStateFlow(): StateFlow<FetchState<List<Dish>>> {
+    override fun getStateFlow(): StateFlow<FetchState<List<StationDishInfo>>> {
         return flowOf(FetchState.success(MenuDataSupplier.getDishList()))
             .stateIn(
                 scope = coroutineScope,

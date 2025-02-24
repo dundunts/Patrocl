@@ -8,15 +8,15 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
-import org.turter.patrocl.data.mapper.menu.toDetailed
 import org.turter.patrocl.domain.exception.ComponentMenuErrorException
 import org.turter.patrocl.domain.fetcher.CategoryFetcher
 import org.turter.patrocl.domain.fetcher.DishFetcher
 import org.turter.patrocl.domain.fetcher.ModifiersFetcher
 import org.turter.patrocl.domain.fetcher.ModifiersGroupFetcher
+import org.turter.patrocl.domain.fetcher.ModifiersSchemeFetcher
+import org.turter.patrocl.domain.fetcher.OrderItemVoidFetcher
 import org.turter.patrocl.domain.model.DataStatus
 import org.turter.patrocl.domain.model.DataStatus.Empty
 import org.turter.patrocl.domain.model.DataStatus.Error
@@ -25,20 +25,26 @@ import org.turter.patrocl.domain.model.DataStatus.Loading
 import org.turter.patrocl.domain.model.DataStatus.Ready
 import org.turter.patrocl.domain.model.FetchState
 import org.turter.patrocl.domain.model.FetchState.Finished
-import org.turter.patrocl.domain.model.menu.Category
-import org.turter.patrocl.domain.model.menu.Dish
-import org.turter.patrocl.domain.model.menu.DishModifier
-import org.turter.patrocl.domain.model.menu.MenuData
-import org.turter.patrocl.domain.model.menu.ModifiersGroup
+import org.turter.patrocl.domain.model.menu.CategoriesTreeData
+import org.turter.patrocl.domain.model.menu.MenuTreeData
+import org.turter.patrocl.domain.model.menu.ModifierSchemeInfo
+import org.turter.patrocl.domain.model.menu.ModifiersGroupsTreeData
+import org.turter.patrocl.domain.model.menu.StationDishInfo
+import org.turter.patrocl.domain.model.menu.StationModifierInfo
+import org.turter.patrocl.domain.model.menu.deprecated.MenuData
 import org.turter.patrocl.domain.model.stoplist.StopListItem
+import org.turter.patrocl.domain.model.voids.OrderItemVoidInfo
 import org.turter.patrocl.domain.service.MenuService
 import org.turter.patrocl.domain.service.StopListService
+import org.turter.patrocl.utils.combine
 
 class MenuServiceImpl(
-    private val categoryFetcher: CategoryFetcher,
-    private val modifiersGroupFetcher: ModifiersGroupFetcher,
     private val dishesFetcher: DishFetcher,
+    private val categoryFetcher: CategoryFetcher,
     private val modifiersFetcher: ModifiersFetcher,
+    private val modifiersGroupFetcher: ModifiersGroupFetcher,
+    private val modifiersSchemeFetcher: ModifiersSchemeFetcher,
+    private val orderItemVoidFetcher: OrderItemVoidFetcher,
     private val stopListService: StopListService
 ) : MenuService {
     private val log = Logger.withTag("MenuServiceImpl")
@@ -47,17 +53,21 @@ class MenuServiceImpl(
 
     private val menuDataStatus = flow<DataStatus> {
         combine(
-            categoryFetcher.getDataStatus(),
-            modifiersGroupFetcher.getDataStatus(),
             dishesFetcher.getDataStatus(),
-            modifiersFetcher.getDataStatus()
-        ) { cat, modisGroup, dishes, modis ->
-            if (cat is Ready && dishes is Ready && modis is Ready && modisGroup is Ready) Ready
-            else if (cat is Error || dishes is Error || modis is Error || modisGroup is Error) Error(
-                ComponentMenuErrorException()
-            )
-            else if (cat is Empty || dishes is Empty || modis is Empty || modisGroup is Empty) Empty
-            else if (cat is Initial || dishes is Initial || modis is Initial || modisGroup is Initial) Initial
+            categoryFetcher.getDataStatus(),
+            modifiersFetcher.getDataStatus(),
+            modifiersGroupFetcher.getDataStatus(),
+            modifiersSchemeFetcher.getDataStatus(),
+            orderItemVoidFetcher.getDataStatus()
+        ) { dishes, cat, modis, modisGroup, modiSchemes, voids ->
+            if (dishes is Ready && cat is Ready && modis is Ready && modisGroup is Ready
+                && modiSchemes is Ready && voids is Ready) Ready
+            else if (dishes is Error || cat is Error || modis is Error || modisGroup is Error
+                || modiSchemes is Error || voids is Error) Error(ComponentMenuErrorException())
+            else if (dishes is Empty || cat is Empty || modis is Empty || modisGroup is Empty
+                || modiSchemes is Empty || voids is Empty) Empty
+            else if (dishes is Initial || cat is Initial || modis is Initial
+                || modisGroup is Initial || modiSchemes is Initial || voids is Initial) Initial
             else Loading
         }.collect { newValue ->
             emit(newValue)
@@ -68,36 +78,44 @@ class MenuServiceImpl(
         initialValue = Initial
     )
 
-    private val menuDataStateFlow = flow<FetchState<MenuData>> {
+    private val menuDataStateFlow = flow<FetchState<MenuTreeData>> {
         combine(
             dishesFetcher.getStateFlow(),
             categoryFetcher.getStateFlow(),
             modifiersFetcher.getStateFlow(),
             modifiersGroupFetcher.getStateFlow(),
+            modifiersSchemeFetcher.getStateFlow(),
+            orderItemVoidFetcher.getStateFlow(),
             stopListService.getStopListStateFlow()
-        ) { dishes, category, modifiers, modifiersGroup, stopList ->
+        ) { dishes, categories, modis, modiGroups, modiSchemes, voids, stopList ->
             log.d {
                 "Combine flows to menu data flow: \n" +
                     "- dishes: $dishes \n" +
-                    "- category: $category \n" +
-                    "- modifiers: $modifiers \n" +
-                    "- modifiersGroup: $modifiersGroup \n" +
+                    "- category: $categories \n" +
+                    "- modifiers: $modis \n" +
+                    "- modifiersGroup: $modiGroups \n" +
+                    "- modiSchemes: $modiSchemes \n" +
+                    "- voids: $voids \n" +
                     "- stopList: $stopList \n"
             }
             if (
-                dishes is Finished
-                && category is Finished
-                && modifiers is Finished
-                && modifiersGroup is Finished
+                categories is Finished
+                && dishes is Finished
+                && modis is Finished
+                && modiGroups is Finished
+                && modiSchemes is Finished
+                && voids is Finished
                 && stopList is Finished
             ) {
                 try {
                     FetchState.success(
-                        collectMenuData(
-                            rootCategory = category.result.getOrThrow(),
-                            rootModifiersGroup = modifiersGroup.result.getOrThrow(),
+                        buildMenuTreeData(
                             dishes = dishes.result.getOrThrow(),
-                            modifiers = modifiers.result.getOrThrow(),
+                            categoriesTree = categories.result.getOrThrow(),
+                            modifiers = modis.result.getOrThrow(),
+                            modifiersGroupTree = modiGroups.result.getOrThrow(),
+                            modifiersSchemes = modiSchemes.result.getOrThrow(),
+                            voids = voids.result.getOrThrow(),
                             stopList = stopList.result.getOrThrow().items
                         )
                     )
@@ -118,10 +136,10 @@ class MenuServiceImpl(
         initialValue = FetchState.initial()
     )
 
-    override fun getMenuDataStateFlow(): StateFlow<FetchState<MenuData>> =
+    override fun getMenuTreeDataStateFlow(): StateFlow<FetchState<MenuTreeData>> =
         menuDataStateFlow
 
-    override fun getMenuDataStatusStateFlow(): StateFlow<DataStatus> =
+    override fun getMenuTreeDataStatusStateFlow(): StateFlow<DataStatus> =
         menuDataStatus
 
     override suspend fun refreshMenu() {
@@ -134,32 +152,45 @@ class MenuServiceImpl(
     override suspend fun refreshMenuFromApi() {
         coroutineScope {
             awaitAll(
-                async { categoryFetcher.refreshFromRemote() },
-                async { modifiersGroupFetcher.refreshFromRemote() },
                 async { dishesFetcher.refreshFromRemote() },
-                async { modifiersFetcher.refreshFromRemote() }
+                async { categoryFetcher.refreshFromRemote() },
+                async { modifiersFetcher.refreshFromRemote() },
+                async { modifiersGroupFetcher.refreshFromRemote() },
+                async { modifiersSchemeFetcher.refreshFromRemote() },
+                async { orderItemVoidFetcher.refreshFromRemote() }
             )
         }
     }
 
-    private fun collectMenuData(
-        rootCategory: Category,
-        rootModifiersGroup: ModifiersGroup,
-        dishes: List<Dish>,
-        modifiers: List<DishModifier>,
+    private fun buildMenuTreeData(
+        dishes: List<StationDishInfo>,
+        categoriesTree: CategoriesTreeData,
+        modifiers: List<StationModifierInfo>,
+        modifiersGroupTree: ModifiersGroupsTreeData,
+        modifiersSchemes: List<ModifierSchemeInfo>,
+        voids: List<OrderItemVoidInfo>,
         stopList: List<StopListItem>
-    ): MenuData {
-        log.d("Start collect menu data for: \n" +
-                " - rootCategory: $rootCategory \n" +
-                " - rootModifiersGroup: $rootModifiersGroup \n" +
-                " - dishes: $dishes \n" +
-                " - modifiers: $modifiers \n" +
-                " - stopList: $stopList")
-        return MenuData(
-            rootCategory = rootCategory.toDetailed(null, dishes, stopList),
-            rootModifiersGroup = rootModifiersGroup.toDetailed(null, modifiers),
-            dishes = dishes.map { it.toDetailed(stopList) }.toList(),
-            modifiers = modifiers
+    ): MenuTreeData {
+        log.d(
+            "Start collect menu data for: \n" +
+                    " - dishes: $dishes \n" +
+                    " - categoriesTree: $categoriesTree \n" +
+                    " - modifiers: $modifiers \n" +
+                    " - modifiersGroupTree: $modifiersGroupTree \n" +
+                    " - modifiersSchemes: $modifiersSchemes \n" +
+                    " - voids: $voids \n" +
+                    " - stopList: $stopList"
+        )
+        return MenuTreeData(
+            rootCategoryRkId = categoriesTree.rootCategoryRkId,
+            dishRkIdMap = dishes.associateBy { it.rkId },
+            categoryRkIdMap = categoriesTree.categories.associateBy { it.rkId },
+            rootModifierGroupRkId = modifiersGroupTree.rootGroupRkId,
+            modifiersGroupRkIdMap = modifiersGroupTree.groups.associateBy { it.rkId },
+            modifiersRkIdMap = modifiers.associateBy { it.rkId },
+            modifiersSchemeRkIdMap = modifiersSchemes.associateBy { it.rkId },
+            orderItemVoids = voids,
+            stopListDishRkIdMap = stopList.associateBy { it.dishId }
         )
     }
 }

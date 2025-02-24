@@ -26,6 +26,8 @@ sealed class FetchState<out T> {
 
     fun takeIfSuccess(): T? = if (this is Finished) this.result.getOrNull() else null
 
+    fun takeCauseIfFailure(): Throwable? = if (this is Finished) this.result.exceptionOrNull() else null
+
 //    fun getOrThrow(): T = (this as Finished).result.getOrThrow()
 
 }

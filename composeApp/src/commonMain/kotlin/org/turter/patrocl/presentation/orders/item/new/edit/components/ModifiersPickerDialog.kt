@@ -30,8 +30,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import org.turter.patrocl.domain.model.menu.DishModifier
-import org.turter.patrocl.domain.model.menu.ModifiersGroupDetailed
+import org.turter.patrocl.domain.model.menu.deprecated.DishModifier
+import org.turter.patrocl.domain.model.menu.deprecated.ModifiersGroupDetailed
 import org.turter.patrocl.presentation.components.SearchTextField
 import org.turter.patrocl.presentation.components.dialog.FullscreenDialog
 

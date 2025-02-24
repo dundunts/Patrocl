@@ -3,7 +3,7 @@ package org.turter.patrocl.presentation.orders.edit
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.benasher44.uuid.Uuid
-import org.turter.patrocl.domain.model.menu.MenuData
+import org.turter.patrocl.domain.model.menu.deprecated.MenuData
 import org.turter.patrocl.domain.model.order.NewOrderItem
 import org.turter.patrocl.domain.model.order.Order
 import org.turter.patrocl.domain.model.person.Waiter

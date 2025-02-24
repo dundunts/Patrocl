@@ -5,9 +5,9 @@ import co.touchlab.kermit.Logger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import org.turter.patrocl.domain.model.menu.DishDetailed
-import org.turter.patrocl.domain.model.menu.DishModifier
-import org.turter.patrocl.domain.model.menu.MenuData
+import org.turter.patrocl.domain.model.menu.deprecated.DishDetailed
+import org.turter.patrocl.domain.model.menu.deprecated.DishModifier
+import org.turter.patrocl.domain.model.menu.deprecated.MenuData
 import org.turter.patrocl.domain.model.order.NewOrderItem
 import org.turter.patrocl.presentation.orders.common.AddingWarningType
 import org.turter.patrocl.presentation.orders.common.InterceptedAddingDish
@@ -38,7 +38,9 @@ class EditNewOrderItemViewModel(
         EditNewOrderItemScreenState(
             originalItem = originalItem,
             dish = menuData.dishes.first { it.id == originalItem.dishId },
-            quantity = originalItem.quantity,
+//            quantity = originalItem.rkQuantity,
+            //TODO remove
+            quantity = 1f,
             modifiers = originalItem.modifiers
         )
     )
@@ -89,7 +91,7 @@ class EditNewOrderItemViewModel(
                                 ?.let { savedMod ->
                                     set(
                                         indexOf(savedMod),
-                                        savedMod.copy(quantity = savedMod.quantity + quantity)
+                                        savedMod.copy(count = savedMod.count + quantity)
                                     )
                                 }
                                 ?: add(
@@ -139,30 +141,30 @@ class EditNewOrderItemViewModel(
     private fun cleanInterceptedAdding() = transformState { it.copy(interceptedAdding = null) }
 
     private fun saveChanges(action: () -> Unit) {
-        withState { state ->
-            val itemToSave = originalItem.copy(
-                dishId = state.dish.id,
-                dishName = state.dish.name,
-                quantity = state.quantity,
-                modifiers = state.modifiers
-            )
-            val onStop = state.dish.onStop
-            val remainingCount = state.dish.remainingCount
-
-            if (onStop || remainingCount - state.quantity < 5) {
-                transformState {
-                    it.copy(
-                        interceptedAdding = InterceptedAddingDish(
-                            target = itemToSave,
-                            warningType = AddingWarningType.of(onStop, remainingCount)
-                        )
-                    )
-                }
-            } else {
-                onSave(itemToSave)
-                action()
-            }
-        }
+//        withState { state ->
+//            val itemToSave = originalItem.copy(
+//                dishId = state.dish.id,
+//                dishName = state.dish.name,
+//                rkQuantity = state.quantity,
+//                modifiers = state.modifiers
+//            )
+//            val onStop = state.dish.onStop
+//            val remainingCount = state.dish.remainingCount
+//
+//            if (onStop || remainingCount - state.quantity < 5) {
+//                transformState {
+//                    it.copy(
+//                        interceptedAdding = InterceptedAddingDish(
+//                            target = itemToSave,
+//                            warningType = AddingWarningType.of(onStop, remainingCount)
+//                        )
+//                    )
+//                }
+//            } else {
+//                onSave(itemToSave)
+//                action()
+//            }
+//        }
     }
 
     private fun deleteItem(action: () -> Unit) {

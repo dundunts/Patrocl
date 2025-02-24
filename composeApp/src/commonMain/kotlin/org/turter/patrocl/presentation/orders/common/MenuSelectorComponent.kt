@@ -1,7 +1,6 @@
 package org.turter.patrocl.presentation.orders.common
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -18,8 +17,6 @@ import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -32,11 +29,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import org.turter.patrocl.domain.model.menu.CategoryDetailed
-import org.turter.patrocl.domain.model.menu.DishDetailed
+import org.turter.patrocl.domain.model.menu.deprecated.CategoryDetailed
+import org.turter.patrocl.domain.model.menu.deprecated.DishDetailed
 import org.turter.patrocl.presentation.components.SearchTextField
 
 @Composable

@@ -83,7 +83,7 @@ fun OrderCard(
                 fontSize = MaterialTheme.typography.bodyLarge.fontSize
             )
             Text(
-                text = "Сумма: ${order.sum}",
+                text = "Сумма: ${order.rkSum}",
                 fontSize = MaterialTheme.typography.titleMedium.fontSize,
                 fontWeight = FontWeight.ExtraBold
             )

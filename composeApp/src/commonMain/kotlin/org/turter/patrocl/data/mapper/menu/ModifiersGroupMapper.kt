@@ -1,48 +1,61 @@
 package org.turter.patrocl.data.mapper.menu
 
 import io.realm.kotlin.ext.toRealmList
-import org.turter.patrocl.data.dto.source.ModifiersGroupDto
-import org.turter.patrocl.data.local.entity.ModifiersGroupLocal
-import org.turter.patrocl.domain.model.menu.DishModifier
-import org.turter.patrocl.domain.model.menu.ModifiersGroup
-import org.turter.patrocl.domain.model.menu.ModifiersGroupDetailed
+import org.turter.patrocl.data.dto.source.modifier.group.ModifierGroupInfoDto
+import org.turter.patrocl.data.local.entity.menu.ModifiersGroupLocal
+import org.turter.patrocl.domain.model.menu.ModifierGroupInfo
+import org.turter.patrocl.domain.model.menu.deprecated.DishModifier
+import org.turter.patrocl.domain.model.menu.deprecated.ModifiersGroup
+import org.turter.patrocl.domain.model.menu.deprecated.ModifiersGroupDetailed
 
-fun ModifiersGroupDto.toModifiersGroup(): ModifiersGroup =
-    ModifiersGroup(
+fun ModifierGroupInfoDto.toModifiersGroupInfo(): ModifierGroupInfo =
+    ModifierGroupInfo(
         id = id,
+        rkId = rkId,
         guid = guid,
         code = code,
         name = name,
         status = status,
         mainParentIdent = mainParentIdent,
-        childList = childList.map { it.toModifiersGroup() }.toList(),
-        modifierIdList = modifierIdList
+        childIds = childIds.toList(),
+        modifierIds = modifierIds.toList()
     )
 
-fun ModifiersGroupDto.toModifiersGroupLocal(): ModifiersGroupLocal =
+fun ModifierGroupInfoDto.toModifiersGroupLocal(): ModifiersGroupLocal =
     ModifiersGroupLocal().let { target ->
         target.id = id
+        target.rkId = rkId
         target.guid = guid
         target.code = code
         target.name = name
         target.status = status
         target.mainParentIdent = mainParentIdent
-        target.childList = childList.map { it.toModifiersGroupLocal() }.toRealmList()
-        target.modifierIdList = modifierIdList.toRealmList()
+        target.childIds = childIds.toRealmList()
+        target.modifierIds = modifierIds.toRealmList()
         return@let target
     }
 
-fun ModifiersGroupLocal.toModifiersGroup(): ModifiersGroup =
-    ModifiersGroup(
+fun ModifiersGroupLocal.toModifiersGroupInfo(): ModifierGroupInfo =
+    ModifierGroupInfo(
         id = id,
+        rkId = rkId,
         guid = guid,
         code = code,
         name = name,
         status = status,
         mainParentIdent = mainParentIdent,
-        childList = childList.map { it.toModifiersGroup() }.toList(),
-        modifierIdList = modifierIdList
+        childIds = childIds.toList(),
+        modifierIds = modifierIds.toList()
     )
+
+fun List<ModifierGroupInfoDto>.toModifiersGroupInfoList(): List<ModifierGroupInfo> =
+    this.map { it.toModifiersGroupInfo() }.toList()
+
+fun List<ModifierGroupInfoDto>.toModifiersGroupLocalList(): List<ModifiersGroupLocal> =
+    this.map { it.toModifiersGroupLocal() }.toList()
+
+fun List<ModifiersGroupLocal>.toModifiersGroupInfoListFromLocal(): List<ModifierGroupInfo> =
+    this.map { it.toModifiersGroupInfo() }.toList()
 
 fun ModifiersGroup.toDetailed(
     parent: ModifiersGroupDetailed?,

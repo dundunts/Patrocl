@@ -17,10 +17,10 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import org.turter.patrocl.data.dto.person.EditOwnEmployeePayload
 import org.turter.patrocl.data.local.LocalSource
-import org.turter.patrocl.data.local.entity.EmployeeLocal
-import org.turter.patrocl.data.mapper.toEmployeeFromDto
-import org.turter.patrocl.data.mapper.toEmployeeFromLocal
-import org.turter.patrocl.data.mapper.toEmployeeLocalFromDto
+import org.turter.patrocl.data.local.entity.person.EmployeeLocal
+import org.turter.patrocl.data.mapper.person.toEmployeeFromDto
+import org.turter.patrocl.data.mapper.person.toEmployeeFromLocal
+import org.turter.patrocl.data.mapper.person.toEmployeeLocalFromDto
 import org.turter.patrocl.data.remote.client.EmployeeApiClient
 import org.turter.patrocl.domain.model.BindStatus
 import org.turter.patrocl.domain.model.FetchState

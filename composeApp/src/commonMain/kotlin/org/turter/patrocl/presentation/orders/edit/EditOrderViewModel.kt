@@ -86,49 +86,49 @@ class EditOrderViewModel(
     val screenState = _screenState.asStateFlow()
 
     init {
-        coroutineScope.launch {
-            combine(
-                orderService.getOrderFlow(orderGuid),
-                menuService.getMenuDataStateFlow(),
-//                tableService.getTablesStateFlow(),
-                waiterService.getOwnWaiterStateFlow()
-            ) { order, menu, waiter ->
-                log.d {
-                    "Combine flows:\n " +
-                            "-Order: $order \n" +
-                            "-Menu: $menu \n" +
-                            "-Waiter: $waiter"
-                }
-                if (order is Finished && menu is Finished && waiter is Finished) {
-                    try {
-                        val orderData = order.result.getOrThrow()
-                        val menuData = menu.result.getOrThrow()
-                        val ownWaiter = waiter.result.getOrThrow()
-                        when (val currentState = _screenState.value) {
-                            is EditOrderScreenState.Main -> currentState.copy(
-                                order = orderData,
-                                menuData = menuData,
-                                ownWaiter = ownWaiter
-                            )
-
-                            else -> EditOrderScreenState.Main(
-                                order = orderData,
-                                menuData = menuData,
-                                ownWaiter = ownWaiter
-                            )
-                        }
-                    } catch (e: Exception) {
-                        log.e { "Catch exception in combine flows: $e" }
-                        e.printStackTrace()
-                        EditOrderScreenState.Error(errorType = ErrorType.from(e))
-                    }
-                } else {
-                    EditOrderScreenState.Loading
-                }
-            }.collect { newScreenState: EditOrderScreenState ->
-                _screenState.value = newScreenState
-            }
-        }
+//        coroutineScope.launch {
+//            combine(
+//                orderService.getOrderFlow(orderGuid),
+//                menuService.getMenuTreeDataStateFlow(),
+////                tableService.getTablesStateFlow(),
+//                waiterService.getOwnWaiterStateFlow()
+//            ) { order, menu, waiter ->
+//                log.d {
+//                    "Combine flows:\n " +
+//                            "-Order: $order \n" +
+//                            "-Menu: $menu \n" +
+//                            "-Waiter: $waiter"
+//                }
+//                if (order is Finished && menu is Finished && waiter is Finished) {
+//                    try {
+//                        val orderData = order.result.getOrThrow()
+//                        val menuData = menu.result.getOrThrow()
+//                        val ownWaiter = waiter.result.getOrThrow()
+//                        when (val currentState = _screenState.value) {
+//                            is EditOrderScreenState.Main -> currentState.copy(
+//                                order = orderData,
+//                                menuData = menuData,
+//                                ownWaiter = ownWaiter
+//                            )
+//
+//                            else -> EditOrderScreenState.Main(
+//                                order = orderData,
+//                                menuData = menuData,
+//                                ownWaiter = ownWaiter
+//                            )
+//                        }
+//                    } catch (e: Exception) {
+//                        log.e { "Catch exception in combine flows: $e" }
+//                        e.printStackTrace()
+//                        EditOrderScreenState.Error(errorType = ErrorType.from(e))
+//                    }
+//                } else {
+//                    EditOrderScreenState.Loading
+//                }
+//            }.collect { newScreenState: EditOrderScreenState ->
+//                _screenState.value = newScreenState
+//            }
+//        }
     }
 
     fun sendEvent(event: EditOrderUiEvent) {
@@ -167,27 +167,27 @@ class EditOrderViewModel(
         quantity: Float = 1f,
         modifiers: List<NewOrderItem.Modifier> = emptyList()
     ) {
-        withMainState()?.apply {
-            val target = NewOrderItem(
-                dishId = dishId,
-                dishName = dishName,
-                quantity = quantity,
-                modifiers = modifiers
-            )
-            menuData.dishes.find { it.id == dishId }
-                ?.takeIf { it.onStop || it.remainingCount - quantity < 5 }
-                ?.let { dish ->
-                    transformMainState {
-                        it.copy(
-                            interceptedAdding = InterceptedAddingDish(
-                                target = target,
-                                warningType = AddingWarningType.of(dish.onStop, dish.remainingCount)
-                            )
-                        )
-                    }
-                }
-                ?: newOrderItems.add(target)
-        }
+//        withMainState()?.apply {
+//            val target = NewOrderItem(
+//                dishId = dishId,
+//                dishName = dishName,
+//                rkQuantity = quantity,
+//                modifiers = modifiers
+//            )
+//            menuData.dishes.find { it.id == dishId }
+//                ?.takeIf { it.onStop || it.remainingCount - quantity < 5 }
+//                ?.let { dish ->
+//                    transformMainState {
+//                        it.copy(
+//                            interceptedAdding = InterceptedAddingDish(
+//                                target = target,
+//                                warningType = AddingWarningType.of(dish.onStop, dish.remainingCount)
+//                            )
+//                        )
+//                    }
+//                }
+//                ?: newOrderItems.add(target)
+//        }
     }
 
     private fun confirmInterceptedAdding() {
@@ -212,7 +212,7 @@ class EditOrderViewModel(
     private fun increaseQuantity(orderItem: NewOrderItem) =
         withMainState()?.newOrderItems?.let {
             val index = it.indexOf(orderItem)
-            val item = orderItem.copy(quantity = orderItem.quantity.inc())
+            val item = orderItem.copy(rkQuantity = orderItem.rkQuantity.inc())
             it[index] = item
             log.d { "Index of item to increase: $index, item: $orderItem" }
         }
@@ -322,32 +322,33 @@ class EditOrderViewModel(
     }
 
     private fun removeSelectedSavedItem(quantity: Float) {
-        withMainState()?.getSingleSelectedSavedItem()?.let { item ->
-            val targetDish = item.dishes.first()
-            if (targetDish.quantity >= quantity) coroutineScope.launch {
-                setRemoving(true)
-                orderService.removeItemFromOrderSession(
-                    orderGuid = orderGuid,
-                    payload = item.copy(
-                        dishes = listOf(targetDish.copy(quantity = targetDish.quantity))
-                    )
-                ).onSuccess { unselectAllItems() }
-                setRemoving(false)
-            }
-        }
+//        withMainState()?.getSingleSelectedSavedItem()?.let { item ->
+//            val targetDish = item.dishes.first()
+//            if (targetDish.quantity >= quantity) coroutineScope.launch {
+//                setRemoving(true)
+//                orderService.removeItemFromOrderSession(
+//                    orderGuid = orderGuid,
+//                    payload = item.copy(
+//                        dishes = listOf(targetDish.copy(quantity = targetDish.quantity))
+//                    )
+//                ).onSuccess { unselectAllItems() }
+//                setRemoving(false)
+//            }
+//        }
     }
 
-    private fun removeAllSelectedSavedItems() =
-        withMainState()?.getAllSelectedSavedItems()?.let { items ->
-            if (items.isNotEmpty()) coroutineScope.launch {
-                setRemoving(true)
-                orderService.removeItemsFromOrderSessions(
-                    orderGuid = orderGuid,
-                    payload = items
-                ).onSuccess { unselectAllItems() }
-                setRemoving(false)
-            }
-        }
+    private fun removeAllSelectedSavedItems(): Unit {
+//        return withMainState()?.getAllSelectedSavedItems()?.let { items ->
+//            if (items.isNotEmpty()) coroutineScope.launch {
+//                setRemoving(true)
+//                orderService.removeItemsFromOrderSessions(
+//                    orderGuid = orderGuid,
+//                    payload = items
+//                ).onSuccess { unselectAllItems() }
+//                setRemoving(false)
+//            }
+//        }
+    }
 
     private fun saveOrderAndThen(action: () -> Unit) {
         log.d { "On save order and go to all orders" }
