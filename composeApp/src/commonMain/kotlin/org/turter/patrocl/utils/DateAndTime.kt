@@ -27,4 +27,8 @@ fun LocalDateTime.toFormatTime(): String {
     return "${hour.printTwoDigits()}:${minute.printTwoDigits()}:${second.printTwoDigits()}"
 }
 
+fun LocalDateTime.toFormatHhMm(): String {
+    return "${hour.printTwoDigits()}:${minute.printTwoDigits()}"
+}
+
 private fun Int.printTwoDigits() = this.toString().let { if (it.length < 2) "0$it" else it }

@@ -19,7 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import org.turter.patrocl.presentation.components.SearchTextField
+import org.turter.patrocl.presentation.components.input.SearchTextField
 import org.turter.patrocl.presentation.orders.list.OrdersFilter
 import org.turter.patrocl.ui.icons.Filter_alt
 
@@ -42,7 +42,8 @@ fun OrdersHeader(
                 onValueChange = { setNewFilter(currentOrdersFilter.copy(searchName = it)) },
                 placeholder = { Text(text = "Название...") },
                 textColor = MaterialTheme.colorScheme.onSurface,
-                colors = OutlinedTextFieldDefaults.colors()
+                colors = OutlinedTextFieldDefaults.colors(),
+                onClearClick = { setNewFilter(currentOrdersFilter.copy(searchName = "")) }
             )
         },
         actions = {
@@ -63,9 +64,9 @@ fun OrdersHeader(
                 )
             }
         },
-        colors = TopAppBarDefaults.topAppBarColors().copy(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest
-        )
+//        colors = TopAppBarDefaults.topAppBarColors().copy(
+//            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest
+//        )
     )
 
 //    Box(

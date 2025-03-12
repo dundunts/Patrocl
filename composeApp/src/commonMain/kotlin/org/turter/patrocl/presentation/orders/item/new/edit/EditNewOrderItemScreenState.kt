@@ -3,7 +3,7 @@ package org.turter.patrocl.presentation.orders.item.new.edit
 import org.turter.patrocl.domain.model.menu.deprecated.DishDetailed
 import org.turter.patrocl.domain.model.menu.deprecated.DishModifier
 import org.turter.patrocl.domain.model.order.NewOrderItem
-import org.turter.patrocl.presentation.orders.common.InterceptedAddingDish
+import org.turter.patrocl.presentation.orders.common.interceptor.InterceptedAddingDish
 
 data class EditNewOrderItemScreenState(
     val originalItem: NewOrderItem,

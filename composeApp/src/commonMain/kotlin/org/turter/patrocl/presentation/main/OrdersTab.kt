@@ -10,9 +10,7 @@ import org.turter.patrocl.domain.model.person.Waiter
 import org.turter.patrocl.presentation.orders.list.OrdersScreen
 import org.turter.patrocl.ui.icons.Table_restaurant
 
-data class OrdersTab(
-    val waiter: Waiter
-): Tab {
+data object OrdersTab : Tab {
     @Composable
     override fun Content() {
         Navigator(OrdersScreen())

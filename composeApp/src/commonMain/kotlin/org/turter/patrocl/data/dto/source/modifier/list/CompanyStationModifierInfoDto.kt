@@ -13,5 +13,6 @@ data class CompanyStationModifierInfoDto(
     val mainParentIdent: String,
     val maxOneDish: Int,
     val useLimitedQnt: Boolean,
+    val inputName: Boolean,
     val price: Int
 )

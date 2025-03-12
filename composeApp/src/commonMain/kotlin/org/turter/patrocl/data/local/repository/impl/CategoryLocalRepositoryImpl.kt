@@ -17,7 +17,7 @@ class CategoryLocalRepositoryImpl : CategoryLocalRepository {
     private val realm = RealmManager.getRealm()
 
     override fun get(): Flow<Result<List<CategoryLocal>>> = flow {
-        log.d { "Start Entity getAll flow" }
+        log.d { "Start categories getAll flow" }
         realm.query<CategoryLocal>()
             .asFlow()
             .collect { res ->
@@ -27,16 +27,17 @@ class CategoryLocalRepositoryImpl : CategoryLocalRepository {
 
     override suspend fun replace(data: List<CategoryLocal>) {
         cleanUp()
+        log.d { "Start writing to realm categories, total elements: ${data.size}" }
         data.forEach { element ->
             realm.write {
-                log.d { "Write to realm Entity: $data" }
                 copyToRealm(element)
             }
         }
+        log.d { "Complete writing to realm categories, total elements: ${data.size}" }
     }
 
     override suspend fun cleanUp() {
-        log.d { "Start cleanup Entity" }
+        log.d { "Start cleanup categories" }
         realm.write {
             delete(this.query<CategoryLocal>())
         }

@@ -58,6 +58,7 @@ class CategoryFetcherImpl(
     private val rootCategoryRkIdFlow = companyInfoRepository
         .get()
         .map { res ->
+            log.d { "Get company info: ${res.getOrNull()}" }
             res.map { it.rootCategoryRkId }
         }
         .distinctUntilChanged()
@@ -137,6 +138,8 @@ class CategoryFetcherImpl(
                             "CategoryDto: $categoryData"
                 }
                 categoryRepository.replace(categoryData.categories.toCategoryLocalList())
+                log.d { "Complete replacing categories in local storage - " +
+                        "start updating versions repository" }
                 versionRepository.updateVersion(
                     CompanySourceDataVersion.forCategories(
                         categoryData.companyId,
@@ -144,10 +147,13 @@ class CategoryFetcherImpl(
                         categoryData.version
                     ).toCompanySourceDataVersionLocal()
                 )
+                log.d { "Complete updating versions repository - start updating company info " +
+                        "repository: set root category rk id: ${categoryData.rootCategoryRkId}" }
                 companyInfoRepository.setRootCategoryRkId(
                     categoryData.companyId,
                     categoryData.rootCategoryRkId
                 )
+                log.d { "Complete updating company info - emit data status Ready" }
                 categoryDataStatus.emit(Ready)
             },
             onFailure = { cause ->

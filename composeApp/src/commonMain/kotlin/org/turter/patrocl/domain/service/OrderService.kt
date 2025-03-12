@@ -7,7 +7,6 @@ import org.turter.patrocl.domain.model.order.NewOrderItem
 import org.turter.patrocl.domain.model.order.Order
 import org.turter.patrocl.domain.model.order.OrderPreview
 import org.turter.patrocl.domain.model.person.Waiter
-import org.turter.patrocl.domain.model.hall.deprecated.Table
 import org.turter.patrocl.domain.model.order.RemoveOrderItemsSession
 
 interface OrderService {
@@ -17,7 +16,7 @@ interface OrderService {
     suspend fun refreshCurrentOrder()
 
     suspend fun createOrder(
-        table: Table,
+        table: TableInfo,
         waiter: Waiter,
         orderItems: List<NewOrderItem>
     ): Result<Order>

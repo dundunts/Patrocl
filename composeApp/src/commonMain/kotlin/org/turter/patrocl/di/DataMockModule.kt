@@ -10,7 +10,9 @@ import org.turter.patrocl.data_mock.StopListServiceMock
 import org.turter.patrocl.data_mock.TableServiceMock
 import org.turter.patrocl.data_mock.WaiterServiceMock
 import org.turter.patrocl.data_mock.fetcher.DishFetcherMock
+import org.turter.patrocl.data_mock.fetcher.HallFetcherMock
 import org.turter.patrocl.domain.fetcher.DishFetcher
+import org.turter.patrocl.domain.fetcher.HallFetcher
 import org.turter.patrocl.domain.service.AuthService
 import org.turter.patrocl.domain.service.EmployeeService
 import org.turter.patrocl.domain.service.MenuService
@@ -39,5 +41,7 @@ val dataMockModule = module {
     single<WaiterService> { WaiterServiceMock() }
 
     single<DishFetcher> { DishFetcherMock() }
+
+    single<HallFetcher> { HallFetcherMock() }
 
 }

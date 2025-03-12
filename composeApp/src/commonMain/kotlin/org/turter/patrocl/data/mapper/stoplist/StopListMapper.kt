@@ -4,7 +4,6 @@ import kotlinx.datetime.LocalDateTime
 import org.turter.patrocl.data.dto.stoplist.StopListDto
 import org.turter.patrocl.data.dto.stoplist.StopListItemDto
 import org.turter.patrocl.domain.model.menu.StationDishInfo
-import org.turter.patrocl.domain.model.menu.deprecated.Dish
 import org.turter.patrocl.domain.model.stoplist.StopList
 import org.turter.patrocl.domain.model.stoplist.StopListItem
 
@@ -19,7 +18,7 @@ fun StopListDto.toStopList(dishes: List<StationDishInfo>) =
 
 fun StopListItemDto.toStopListItem(dishes: List<StationDishInfo>) = StopListItem(
     id = id,
-    dishId = dishId,
+    dishRkId = dishId,
     dishName = dishes.find { it.rkId == dishId }?.name?:"",
     onStop = onStop,
     remainingCount = remainingCount,

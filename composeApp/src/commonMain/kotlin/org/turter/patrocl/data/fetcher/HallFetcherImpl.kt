@@ -129,6 +129,7 @@ class HallFetcherImpl(
                 val halls = res.halls
                 log.d {
                     "Success fetching halls from remote - start replace to local data. " +
+                            "Company id: $companyId " +
                             "Halls list size: ${halls.size}"
                 }
                 hallRepository.replace(halls.toHallLocalList())

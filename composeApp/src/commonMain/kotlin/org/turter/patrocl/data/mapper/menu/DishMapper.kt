@@ -1,6 +1,5 @@
 package org.turter.patrocl.data.mapper.menu
 
-import org.turter.patrocl.data.dto.source.deprecated.DishDto
 import org.turter.patrocl.data.dto.source.dish.CompanyStationDishInfoDto
 import org.turter.patrocl.data.local.entity.menu.DishLocal
 import org.turter.patrocl.domain.model.menu.StationDishInfo
@@ -69,7 +68,7 @@ fun List<DishLocal>.toStationDishInfoList(): List<StationDishInfo> =
     this.map { it.toStationDishInfo() }.toList()
 
 fun Dish.toDetailed(stopList: List<StopListItem>): DishDetailed {
-    val stopListItem = stopList.find { item -> item.dishId == this.id }
+    val stopListItem = stopList.find { item -> item.dishRkId == this.id }
     return DishDetailed(
         id = this.id,
         guid = this.guid,

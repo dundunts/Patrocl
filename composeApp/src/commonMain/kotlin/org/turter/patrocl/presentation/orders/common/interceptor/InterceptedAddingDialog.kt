@@ -1,4 +1,4 @@
-package org.turter.patrocl.presentation.orders.common
+package org.turter.patrocl.presentation.orders.common.interceptor
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning

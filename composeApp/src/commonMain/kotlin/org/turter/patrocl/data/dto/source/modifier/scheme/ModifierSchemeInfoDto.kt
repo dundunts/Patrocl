@@ -20,14 +20,13 @@ data class ModifierSchemeInfoDto(
         val id: String,
         val rkId: String,
         val guid: String,
-        val code: String,
         val name: String,
-        val status: String,
-        val mainParentIdent: String,
-        val modifiersGroup: ModifierGroupInfoDto,
+        val modifiersGroupRkId: String,
         val defaultModifier: String,
         val upLimit: Int,
         val downLimit: Int,
-        val freeCount: Boolean
+        val freeCount: Boolean,
+        val useUpLimit: Boolean,
+        val useDownLimit: Boolean
     )
 }

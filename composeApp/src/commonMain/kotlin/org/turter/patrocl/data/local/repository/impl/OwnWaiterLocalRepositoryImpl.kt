@@ -26,9 +26,9 @@ class OwnWaiterLocalRepositoryImpl: OwnWaiterLocalRepository {
     }
 
     override suspend fun replace(data: WaiterLocal) {
-        cleanUp()
         realm.write {
             log.d { "Write to realm Entity: $data" }
+            delete(this.query<WaiterLocal>())
             copyToRealm(data)
         }
     }

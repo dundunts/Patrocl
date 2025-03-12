@@ -19,9 +19,8 @@ import org.publicvalue.multiplatform.oidc.tokenstore.removeTokens
 import org.publicvalue.multiplatform.oidc.tokenstore.tokensFlow
 import org.publicvalue.multiplatform.oidc.types.Jwt
 import org.turter.patrocl.data.auth.AppAuth
-import org.turter.patrocl.data.local.LocalSource
 import org.turter.patrocl.data.local.repository.OwnWaiterLocalRepository
-import org.turter.patrocl.data.local.entity.person.EmployeeLocal
+import org.turter.patrocl.data.local.repository.EmployeeLocalRepository
 import org.turter.patrocl.domain.exception.AuthorizeException
 import org.turter.patrocl.domain.exception.InvalidTokenException
 import org.turter.patrocl.domain.exception.InvalidUserFromTokenException
@@ -39,7 +38,7 @@ class AuthServiceImpl(
     private val httpClient: HttpClient,
     private val tokenStore: TokenStore,
     private val ownWaiterLocalRepository: OwnWaiterLocalRepository,
-    private val employeeLocalSource: LocalSource<EmployeeLocal>,
+    private val employeeRepository: EmployeeLocalRepository,
     private val employeeService: EmployeeService,
     private val waiterService: WaiterService
 ) : AuthService {
@@ -187,7 +186,7 @@ class AuthServiceImpl(
                 tokenStore.removeTokens()
                 httpClient.clearTokens()
                 ownWaiterLocalRepository.cleanUp()
-                employeeLocalSource.cleanUp()
+                employeeRepository.cleanUp()
                 log.d { "Logout is complete" }
                 return Result.success(Unit)
             }

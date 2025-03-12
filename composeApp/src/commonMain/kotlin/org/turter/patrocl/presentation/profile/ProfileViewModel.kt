@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import org.turter.patrocl.domain.fetcher.HallFetcher
 import org.turter.patrocl.domain.model.DataStatus
 import org.turter.patrocl.domain.model.FetchState.Finished
 import org.turter.patrocl.domain.model.person.Employee.CompanyEmbedded
@@ -39,7 +40,7 @@ class ProfileViewModel(
     private val waiterService: WaiterService,
     private val employeeService: EmployeeService,
     private val menuService: MenuService,
-    private val tableService: TableService
+    private val hallFetcher: HallFetcher
 ): ScreenModel {
     private val log = Logger.withTag("ProfileViewModel")
 
@@ -55,7 +56,7 @@ class ProfileViewModel(
                 waiterService.getOwnWaiterStateFlow(),
                 employeeService.getOwnEmployeeStateFlow(),
                 menuService.getMenuTreeDataStatusStateFlow(),
-                tableService.getTablesDataStatusStateFlow()
+                hallFetcher.getDataStatus()
             ) { waiter, employee, menuDataStatus, tablesDataStatus ->
                 log.d { "Waiter: $waiter" }
                 log.d { "Employee: $employee" }
@@ -130,7 +131,7 @@ class ProfileViewModel(
     }
 
     private fun updateTablesFromRemote() = coroutineScope.launch {
-        tableService.refreshTablesFromApi()
+        hallFetcher.refreshFromRemote()
     }
 
     private fun refreshProfileInfoFromRemote() = coroutineScope.launch {

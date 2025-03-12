@@ -58,9 +58,9 @@ private fun DefaultTopAppBar(
                 )
             }
         },
-        colors = topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest
-        )
+//        colors = topAppBarColors(
+//            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest
+//        )
     )
 }
 
@@ -97,8 +97,8 @@ private fun ItemsSelectedTopAppBar(
                 )
             }
         },
-        colors = topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest
-        )
+//        colors = topAppBarColors(
+//            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest
+//        )
     )
 }

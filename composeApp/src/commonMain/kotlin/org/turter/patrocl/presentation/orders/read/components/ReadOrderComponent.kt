@@ -1,22 +1,8 @@
 package org.turter.patrocl.presentation.orders.read.components
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import org.turter.patrocl.domain.model.order.Order
-import org.turter.patrocl.presentation.orders.common.OrderItemsGroupsDivider
-import org.turter.patrocl.presentation.orders.common.SavedOrderItemCard
-import org.turter.patrocl.presentation.orders.common.SessionCard
 import org.turter.patrocl.presentation.orders.read.ReadOrderScreenState
-import org.turter.patrocl.presentation.orders.read.ReadOrderUiEvent
 import org.turter.patrocl.presentation.orders.read.ReadOrderViewModel
 
 @Composable

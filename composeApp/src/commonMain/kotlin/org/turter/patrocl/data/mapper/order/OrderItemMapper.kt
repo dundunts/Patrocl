@@ -21,7 +21,7 @@ fun List<OrderItemForRemove>.toRemoveItemPayloadList(): List<OrderItemPayload.Re
 fun List<NewOrderItem>.toOrderItemListPayload(): List<OrderItemPayload.Add> =
     map { item ->
         OrderItemPayload.Add(
-            dishId = item.dishId,
+            dishId = item.dishInfo.rkId,
             rkQuantity = item.rkQuantity,
             modifiers = item.modifiers.toModifierListPayload()
         )
@@ -40,7 +40,7 @@ fun List<NewOrderItem.Modifier>.toModifierListPayload(): List<ModifierPayload> =
 fun List<Order.Dish>.toRemoveItemsPayload(voidId: String): List<OrderItemPayload.Remove> =
     this.map { dish ->
         OrderItemPayload.Remove(
-            dishId = dish.id,
+            dishId = dish.rkId,
             dishCode = dish.code,
             dishUni = dish.uni,
             rkQuantity = dish.rkQuantity,

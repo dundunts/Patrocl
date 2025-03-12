@@ -9,9 +9,12 @@ sealed class OrdersScreenState {
 
     data object Loading: OrdersScreenState()
 
+    data object NotLoggedInOnStation : OrdersScreenState()
+
     data class Content(
         val orders: List<OrderPreview>,
-        val waiter: Waiter
+        val waiter: Waiter,
+        val filter: OrdersFilter
     ) : OrdersScreenState()
 
     data class Error(

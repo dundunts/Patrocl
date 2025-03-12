@@ -7,6 +7,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FavoriteBorder
@@ -20,6 +21,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.tab.CurrentTab
@@ -30,10 +32,10 @@ import co.touchlab.kermit.Logger
 import org.turter.patrocl.presentation.components.CircularLoader
 import org.turter.patrocl.presentation.main.components.MainErrorScreen
 import org.turter.patrocl.presentation.main.components.SnackbarMessageHost
+import org.turter.patrocl.presentation.orders.list.OrdersScreen
+import org.turter.patrocl.presentation.stoplist.list.StopListScreen
 
 class MainScreen : Screen {
-    private val log = Logger.withTag("MainScreen")
-
     @Composable
     override fun Content() {
         val vm: MainViewModel = koinScreenModel()
@@ -48,28 +50,17 @@ class MainScreen : Screen {
         ) { state ->
             when (state) {
                 is MainScreenState.Content -> {
-                    val ordersTab = OrdersTab(waiter = state.waiter)
-                    val tabs = listOf(
-                        StopListTab,
-                        ordersTab,
-                        ProfileTab
-                    )
-                    TabNavigator(tab = ordersTab) {
-                        Scaffold(
-                            bottomBar = {
-                                NavigationBar {
-                                    tabs.forEach { TabNavigatorItem(it) }
-                                }
-                            }
-                        ) { paddingValues ->
-                            Box(
-                                modifier = Modifier.padding(paddingValues)
-                            ) {
+
+                    TabNavigator(tab = OrdersTab) {
+                        Scaffold {
+//                            Box(
+//                                modifier = Modifier.padding(paddingValues)
+//                            ) {
                                 CurrentTab()
                                 SnackbarMessageHost(
                                     messageState = state.messageState.collectAsState()
                                 )
-                            }
+//                            }
                         }
                     }
                 }
@@ -85,21 +76,5 @@ class MainScreen : Screen {
     }
 
 
-    @Composable
-    private fun RowScope.TabNavigatorItem(tab: Tab) {
-        val tabNavigator = LocalTabNavigator.current
-        NavigationBarItem(
-            selected = tabNavigator.current == tab,
-            onClick = {
-                log.d { "Switch to tab: $tab" }
-                tabNavigator.current = tab
-            },
-            label = { Text(tab.options.title) },
-            icon = {
-                val iconPainter =
-                    tab.options.icon ?: rememberVectorPainter(Icons.Default.FavoriteBorder)
-                Icon(painter = iconPainter, contentDescription = tab.options.title)
-            }
-        )
-    }
+
 }

@@ -9,4 +9,19 @@ class CompanySourcesInfoLocal: RealmObject {
     var rootCategoryRkId: String = ""
     var rootModifierGroupRkId: String = ""
     var defaultHallRkId: String = ""
+
+    companion object {
+        fun createFor(companyId: String) =
+            CompanySourcesInfoLocal().apply { this.companyId = companyId }
+    }
+
+    override fun toString(): String {
+        return "CompanySourcesInfoLocal(" +
+                "companyId='$companyId', " +
+                "rootCategoryRkId='$rootCategoryRkId', " +
+                "rootModifierGroupRkId='$rootModifierGroupRkId', " +
+                "defaultHallRkId='$defaultHallRkId'" +
+                ")"
+    }
+
 }

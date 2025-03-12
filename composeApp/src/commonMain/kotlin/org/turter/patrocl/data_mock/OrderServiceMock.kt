@@ -13,7 +13,6 @@ import org.turter.patrocl.data_mock.utils.OrderDataSupplier
 import org.turter.patrocl.domain.model.FetchState
 import org.turter.patrocl.domain.model.Message
 import org.turter.patrocl.domain.model.hall.TableInfo
-import org.turter.patrocl.domain.model.hall.deprecated.Table
 import org.turter.patrocl.domain.model.order.NewOrderItem
 import org.turter.patrocl.domain.model.order.Order
 import org.turter.patrocl.domain.model.order.OrderPreview
@@ -70,7 +69,7 @@ class OrderServiceMock(
     }
 
     override suspend fun createOrder(
-        table: Table,
+        table: TableInfo,
         waiter: Waiter,
         orderItems: List<NewOrderItem>
     ): Result<Order> {

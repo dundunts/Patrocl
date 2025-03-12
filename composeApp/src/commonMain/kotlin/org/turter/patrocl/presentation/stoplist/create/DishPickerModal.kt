@@ -25,15 +25,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import org.turter.patrocl.domain.model.menu.deprecated.Dish
+import org.turter.patrocl.domain.model.menu.StationDishInfo
 import org.turter.patrocl.domain.model.stoplist.StopListItem
-import org.turter.patrocl.presentation.components.SearchTextField
+import org.turter.patrocl.presentation.components.input.SearchTextField
 import org.turter.patrocl.presentation.components.dialog.FullscreenDialog
 import org.turter.patrocl.ui.icons.Restaurant_menu
 
 @Composable
 fun DishPickerModal(
-    dishes: List<Dish>,
+    dishes: List<StationDishInfo>,
     stopList: List<StopListItem>,
     selectedDishId: String,
     onDismiss: () -> Unit,
@@ -73,7 +73,7 @@ fun DishPickerModal(
                     items(items = filteredDishes, key = { it.id }) { dish ->
                         DishPickerElement(
                             selected = dish.id == newSelectedDishId,
-                            enabled = stopList.none { it.dishId == dish.id },
+                            enabled = stopList.none { it.dishRkId == dish.id },
                             name = dish.name,
                             onClick = { newSelectedDishId = dish.id }
                         )

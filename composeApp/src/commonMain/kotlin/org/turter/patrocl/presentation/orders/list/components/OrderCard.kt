@@ -25,6 +25,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.turter.patrocl.domain.model.order.OrderPreview
 import org.turter.patrocl.ui.icons.Fact_check
+import org.turter.patrocl.utils.toFormatHhMm
+import org.turter.patrocl.utils.toRealSum
 
 @Composable
 fun OrderCard(
@@ -79,11 +81,11 @@ fun OrderCard(
                 maxLines = 2
             )
             Text(
-                text = "Создан в: ${order.getFormattedDate()}",
+                text = "Создан в: ${order.createTime.toFormatHhMm()}",
                 fontSize = MaterialTheme.typography.bodyLarge.fontSize
             )
             Text(
-                text = "Сумма: ${order.rkSum}",
+                text = "Сумма: ${order.rkSum.toRealSum()}",
                 fontSize = MaterialTheme.typography.titleMedium.fontSize,
                 fontWeight = FontWeight.ExtraBold
             )

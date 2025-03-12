@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.turter.patrocl.domain.model.stoplist.StopListItem
 import org.turter.patrocl.presentation.components.FullscreenLoader
+import org.turter.patrocl.presentation.components.MainBottomTabNavigator
 import org.turter.patrocl.presentation.components.dialog.RemoveItemsDialog
 import org.turter.patrocl.presentation.stoplist.list.StopListScreenState
 import org.turter.patrocl.presentation.stoplist.list.StopListUiEvent
@@ -54,7 +55,8 @@ fun StopListComponent(
             FloatingActionButton(onClick = onCreateItem) {
                 Icon(imageVector = Icons.Default.Add, contentDescription = "Add icon")
             }
-        }
+        },
+        bottomBar = { MainBottomTabNavigator() }
     ) { innerPadding ->
         Box(
             modifier = Modifier

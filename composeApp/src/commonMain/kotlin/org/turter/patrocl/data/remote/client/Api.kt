@@ -17,7 +17,8 @@ object ApiServiceName {
 
 //TODO актуализировать эндпоинты
 object ApiEndpoint {
-    private val API_BASE_URL_HTTP = "http://92.255.107.65:8765"
+//    private val API_BASE_URL_HTTP = "http://92.255.107.65:8765"
+    private val API_BASE_URL_HTTP = "http://192.168.0.103:18765"
 //    private val API_BASE_URL_WS = "ws://192.168.0.105:18765"
 
     object Menu {

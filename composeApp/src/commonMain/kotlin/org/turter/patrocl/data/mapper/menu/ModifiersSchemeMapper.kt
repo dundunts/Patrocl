@@ -60,15 +60,14 @@ fun ModifierSchemeInfoDto.Details.toModifiersSchemeInfoDetails(): ModifierScheme
         id = id,
         rkId = rkId,
         guid = guid,
-        code = code,
         name = name,
-        status = status,
-        mainParentIdent = mainParentIdent,
-        modifiersGroupRkId = modifiersGroup.rkId,
+        modifiersGroupRkId = modifiersGroupRkId,
         defaultModifier = defaultModifier,
         upLimit = upLimit,
         downLimit = downLimit,
-        freeCount = freeCount
+        freeCount = freeCount,
+        useDownLimit = useDownLimit,
+        useUpLimit = useUpLimit
     )
 
 fun ModifierSchemeInfoDto.Details.toModifiersSchemeDetailsLocal(): ModifiersSchemeDetailsLocal =
@@ -76,15 +75,14 @@ fun ModifierSchemeInfoDto.Details.toModifiersSchemeDetailsLocal(): ModifiersSche
         target.id = id
         target.rkId = rkId
         target.guid = guid
-        target.code = code
         target.name = name
-        target.status = status
-        target.mainParentIdent = mainParentIdent
-        target.modifiersGroupRkId = modifiersGroup.rkId
+        target.modifiersGroupRkId = modifiersGroupRkId
         target.defaultModifier = defaultModifier
         target.upLimit = upLimit
         target.downLimit = downLimit
         target.freeCount = freeCount
+        target.useDownLimit = useDownLimit
+        target.useUpLimit = useUpLimit
         return@let target
     }
 
@@ -93,15 +91,14 @@ fun ModifiersSchemeDetailsLocal.toModifiersSchemeInfoDetails(): ModifierSchemeIn
         id = id,
         rkId = rkId,
         guid = guid,
-        code = code,
         name = name,
-        status = status,
-        mainParentIdent = mainParentIdent,
         modifiersGroupRkId = modifiersGroupRkId,
         defaultModifier = defaultModifier,
         upLimit = upLimit,
         downLimit = downLimit,
-        freeCount = freeCount
+        freeCount = freeCount,
+        useDownLimit = useDownLimit,
+        useUpLimit = useUpLimit
     )
 
 fun List<ModifierSchemeInfoDto.Details>.toModifiersSchemeInfoDetailsList()

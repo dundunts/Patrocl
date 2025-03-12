@@ -15,6 +15,7 @@ fun CompanyStationModifierInfoDto.toModifierLocal(): ModifierLocal =
         target.mainParentIdent = mainParentIdent
         target.maxOneDish = maxOneDish
         target.useLimitedQnt = useLimitedQnt
+        target.inputName = inputName
         target.price = price
         return@let target
     }
@@ -30,6 +31,7 @@ fun CompanyStationModifierInfoDto.toStationModifierInfo(): StationModifierInfo =
         mainParentIdent = mainParentIdent,
         maxOneDish = maxOneDish,
         useLimitedQnt = useLimitedQnt,
+        inputName = inputName,
         price = price
     )
 
@@ -44,6 +46,7 @@ fun ModifierLocal.toStationModifierInfo(): StationModifierInfo =
         mainParentIdent = mainParentIdent,
         maxOneDish = maxOneDish,
         useLimitedQnt = useLimitedQnt,
+        inputName = inputName,
         price = price
     )
 

@@ -24,7 +24,6 @@ import org.turter.patrocl.domain.model.order.NewOrderItem
 import org.turter.patrocl.domain.model.order.Order
 import org.turter.patrocl.domain.model.order.OrderPreview
 import org.turter.patrocl.domain.model.person.Waiter
-import org.turter.patrocl.domain.model.hall.deprecated.Table
 import org.turter.patrocl.domain.model.order.RemoveOrderItemsSession
 import org.turter.patrocl.domain.service.MessageService
 import org.turter.patrocl.domain.service.OrderService
@@ -101,7 +100,7 @@ class OrderServiceImpl(
 
     override suspend fun refreshCurrentOrder() = checkCurrentOrderFlow.emit(OrderActuator.Check)
     override suspend fun createOrder(
-        table: Table,
+        table: TableInfo,
         waiter: Waiter,
         orderItems: List<NewOrderItem>
     ): Result<Order> {

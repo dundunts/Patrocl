@@ -17,14 +17,14 @@ data class Order(
     val sessions: List<Session>
 ) {
     data class Waiter(
-        val id: String,
+        val rkId: String,
         val code: String,
         val name: String,
         val guid: String
     )
 
     data class Table(
-        val id: String,
+        val rkId: String,
         val code: String,
         val name: String,
         val guid: String
@@ -44,7 +44,7 @@ data class Order(
     )
 
     data class Dish(
-        val id: String,
+        val rkId: String,
         val name: String,
         val code: String,
         val guid: String,
@@ -56,7 +56,7 @@ data class Order(
         val modifiers: List<Modifier>
     ) {
         data class Modifier(
-            val id: String,
+            val rkId: String,
             val name: String,
             val code: String,
             val guid: String,

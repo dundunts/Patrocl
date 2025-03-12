@@ -1,4 +1,4 @@
-package org.turter.patrocl.presentation.orders.item.new.edit.components
+package org.turter.patrocl.presentation.orders.common.components
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit

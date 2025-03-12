@@ -8,13 +8,12 @@ class ModifiersSchemeDetailsLocal: RealmObject {
     var id: String = ""
     var rkId: String = ""
     var guid: String = ""
-    var code: String = ""
     var name: String = ""
-    var status: String = ""
-    var mainParentIdent: String = ""
     var modifiersGroupRkId: String = ""
     var defaultModifier: String = ""
     var upLimit: Int = 0
     var downLimit: Int = 0
     var freeCount: Boolean = true
+    var useUpLimit: Boolean = true
+    var useDownLimit: Boolean = true
 }

@@ -118,7 +118,7 @@ class MenuServiceMock : MenuService {
             modifiersRkIdMap = modifiers.associateBy { it.rkId },
             modifiersSchemeRkIdMap = modifiersSchemes.associateBy { it.rkId },
             orderItemVoids = voids,
-            stopListDishRkIdMap = stopList.associateBy { it.dishId }
+            stopListDishRkIdMap = stopList.associateBy { it.dishRkId }
         )
     }
 

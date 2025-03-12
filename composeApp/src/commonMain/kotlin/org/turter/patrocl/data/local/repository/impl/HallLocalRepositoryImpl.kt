@@ -28,18 +28,20 @@ class HallLocalRepositoryImpl : HallLocalRepository {
 
     override suspend fun replace(data: List<HallLocal>) {
         cleanUp()
+        log.d { "Start writing to realm halls and tables, total halls: ${data.size}" }
         data.forEach { element ->
             realm.write {
-                log.d { "Write to realm Entity: $data" }
                 copyToRealm(element)
             }
         }
+        log.d { "Complete writing to realm halls and tables, total halls: ${data.size}" }
     }
 
     override suspend fun cleanUp() {
         log.d { "Start cleanup Entity" }
         realm.write {
             delete(this.query<HallLocal>())
+            delete(this.query<TableLocal>())
         }
     }
 }

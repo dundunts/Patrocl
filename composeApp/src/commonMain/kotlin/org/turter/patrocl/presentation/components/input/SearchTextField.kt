@@ -1,15 +1,19 @@
-package org.turter.patrocl.presentation.components
+package org.turter.patrocl.presentation.components.input
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
@@ -24,9 +28,11 @@ import androidx.compose.ui.unit.dp
 fun SearchTextField(
     value: String,
     onValueChange: (String) -> Unit,
+    onClearClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     placeholder: @Composable (() -> Unit)? = null,
+    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     onTextLayout: (TextLayoutResult) -> Unit = {},
     textColor: Color = MaterialTheme.colorScheme.onSurface,
     colors: TextFieldColors = TextFieldDefaults.colors(),
@@ -47,10 +53,20 @@ fun SearchTextField(
                 contentDescription = "Search icon"
             )
         },
+        trailingIcon = onClearClick?.let {
+            {
+                Icon(
+                    modifier = Modifier.clickable(onClick = onClearClick),
+                    imageVector = Icons.Default.Clear,
+                    contentDescription = "Clear icon"
+                )
+            }
+        },
         placeholder = placeholder,
         textStyle = TextStyle(
             color = textColor
         ),
+        interactionSource = interactionSource,
         cursorBrush = SolidColor(textColor),
         colors = colors,
         keyboardOptions = KeyboardOptions.Default.copy(

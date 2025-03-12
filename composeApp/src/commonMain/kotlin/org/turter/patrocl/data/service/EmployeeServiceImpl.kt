@@ -16,8 +16,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import org.turter.patrocl.data.dto.person.EditOwnEmployeePayload
-import org.turter.patrocl.data.local.LocalSource
-import org.turter.patrocl.data.local.entity.person.EmployeeLocal
+import org.turter.patrocl.data.local.repository.EmployeeLocalRepository
 import org.turter.patrocl.data.mapper.person.toEmployeeFromDto
 import org.turter.patrocl.data.mapper.person.toEmployeeFromLocal
 import org.turter.patrocl.data.mapper.person.toEmployeeLocalFromDto
@@ -29,13 +28,13 @@ import org.turter.patrocl.domain.service.EmployeeService
 
 class EmployeeServiceImpl(
     private val employeeApiClient: EmployeeApiClient,
-    private val employeeLocalSource: LocalSource<EmployeeLocal>
+    private val employeeRepository: EmployeeLocalRepository
 ) : EmployeeService {
     private val log = Logger.withTag("EmployeeRepositoryImpl")
 
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
-    private val employeeFlow = employeeLocalSource
+    private val employeeFlow = employeeRepository
         .get()
         .map { res -> res.map { it.toEmployeeFromLocal() } }
         .distinctUntilChanged()
@@ -103,12 +102,12 @@ class EmployeeServiceImpl(
                     "Success fetching employee from remote - start replace to local data. " +
                             "EmployeeDto: $employeeDto"
                 }
-                employeeLocalSource.replace(employeeDto.toEmployeeLocalFromDto())
+                employeeRepository.replace(employeeDto.toEmployeeLocalFromDto())
                 return Result.success(employeeDto.toEmployeeFromDto())
             },
             onFailure = { cause ->
                 log.e { "Fail fetching employee from remote - start cleanup local data" }
-                employeeLocalSource.cleanUp()
+                employeeRepository.cleanUp()
                 return Result.failure(cause)
             }
         )

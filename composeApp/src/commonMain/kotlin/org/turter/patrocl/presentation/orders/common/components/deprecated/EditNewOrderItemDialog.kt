@@ -1,4 +1,4 @@
-package org.turter.patrocl.presentation.orders.common
+package org.turter.patrocl.presentation.orders.common.components.deprecated
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
@@ -16,7 +16,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -31,9 +30,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -45,10 +42,8 @@ import org.turter.patrocl.domain.model.menu.deprecated.DishDetailed
 import org.turter.patrocl.domain.model.menu.deprecated.DishModifier
 import org.turter.patrocl.domain.model.order.NewOrderItem
 import org.turter.patrocl.presentation.components.DropDownMenuWithFilter
-import org.turter.patrocl.presentation.components.FloatNaturalInput
-import org.turter.patrocl.presentation.components.IntNaturalInput
-import org.turter.patrocl.presentation.components.dialog.DialogComponentsDivider
-import org.turter.patrocl.presentation.components.dialog.FullscreenDialog
+import org.turter.patrocl.presentation.components.input.FloatNaturalInput
+import org.turter.patrocl.presentation.components.input.IntNaturalInput
 
 @Composable
 fun EditNewOrderItemDialog(
@@ -160,7 +155,7 @@ private fun ColumnScope.ModifiersComponent(
                         NewOrderItem.Modifier.regular(
                             modifierId = target.id,
                             name = target.name,
-                            quantity = targetModifierQuantity
+                            count = targetModifierQuantity
                         )
                     )
 
@@ -318,7 +313,7 @@ private fun CreateCommentDialog(
                 onClick = {
                     if (newComment.isNotEmpty() && !comments.contains(newComment)) {
                         modifiers.add(
-                            NewOrderItem.Modifier.comment(
+                            NewOrderItem.Modifier.customComment(
                                 newComment
                                     .trim()
                                     .replace("\\s+".toRegex(), " ")

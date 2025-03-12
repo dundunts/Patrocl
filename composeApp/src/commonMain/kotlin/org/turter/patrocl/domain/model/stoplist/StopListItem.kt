@@ -5,7 +5,7 @@ import kotlinx.datetime.LocalDateTime
 
 data class StopListItem(
     val id: String,
-    val dishId: String,
+    val dishRkId: String,
     val dishName: String,
     val onStop: Boolean,
     val remainingCount: Int,

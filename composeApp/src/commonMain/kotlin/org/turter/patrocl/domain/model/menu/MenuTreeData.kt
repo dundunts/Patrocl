@@ -16,4 +16,20 @@ data class MenuTreeData(
     val orderItemVoids: List<OrderItemVoidInfo>,
 
     val stopListDishRkIdMap: Map<String, StopListItem>
-)
+
+
+) {
+    override fun toString(): String {
+        return "MenuTreeData(" +
+                "rootCategoryRkId='$rootCategoryRkId', " +
+                "dishRkIdMap.size=${dishRkIdMap.size}, " +
+                "categoryRkIdMap.size=${categoryRkIdMap.size}, " +
+                "rootModifierGroupRkId='$rootModifierGroupRkId', " +
+                "modifiersRkIdMap.size=${modifiersRkIdMap.size}, " +
+                "modifiersGroupRkIdMap.size=${modifiersGroupRkIdMap.size}, " +
+                "modifiersSchemeRkIdMap.size=${modifiersSchemeRkIdMap.size}, " +
+                "orderItemVoids=${orderItemVoids.size}, " +
+                "stopListDishRkIdMap.size=${stopListDishRkIdMap.size}" +
+                ")"
+    }
+}

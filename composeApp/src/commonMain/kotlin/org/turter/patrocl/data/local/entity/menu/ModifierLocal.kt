@@ -14,5 +14,6 @@ class ModifierLocal: RealmObject {
     var mainParentIdent: String = ""
     var maxOneDish: Int = 0
     var useLimitedQnt: Boolean = false
+    var inputName: Boolean = false
     var price: Int = 0
 }

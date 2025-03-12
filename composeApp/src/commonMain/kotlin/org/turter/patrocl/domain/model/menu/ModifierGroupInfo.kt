@@ -8,6 +8,7 @@ data class ModifierGroupInfo(
     val name: String,
     val status: String,
     val mainParentIdent: String,
+    val commonModifier: Boolean,
     val childIds: List<String>,
     val modifierIds: List<String>
 )

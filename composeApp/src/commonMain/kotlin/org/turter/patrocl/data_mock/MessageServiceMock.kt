@@ -30,7 +30,7 @@ class MessageServiceMock : MessageService {
         coroutineScope.launch {
             messageChannel
                 .consumeAsFlow()
-                .debounce(messageDelay)
+//                .debounce(messageDelay)
                 .collect { message ->
                     log.d { "Update message state flow. Message: $message" }
                     _messageStateFlow.emit(message)

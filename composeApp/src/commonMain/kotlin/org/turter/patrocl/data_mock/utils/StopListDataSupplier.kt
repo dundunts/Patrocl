@@ -15,7 +15,7 @@ object StopListDataSupplier {
         items = listOf(
             StopListItem(
                 id = "stop-list-item-id-1",
-                dishId = "dish-id-1",
+                dishRkId = "rk-dish-id-1",
                 dishName = "Цезарь с курицей",
                 onStop = true,
                 remainingCount = 0,
@@ -25,7 +25,7 @@ object StopListDataSupplier {
             ),
             StopListItem(
                 id = "stop-list-item-id-2",
-                dishId = "dish-id-3",
+                dishRkId = "rk-dish-id-3",
                 dishName = "Буритто",
                 onStop = false,
                 remainingCount = 1,
@@ -40,7 +40,7 @@ object StopListDataSupplier {
         items = listOf(
             StopListItem(
                 id = "stop-list-item-id-2",
-                dishId = "dish-id-3",
+                dishRkId = "rk-dish-id-3",
                 dishName = "Буритто",
                 onStop = true,
                 remainingCount = 0,
@@ -53,7 +53,7 @@ object StopListDataSupplier {
 
     fun getStopListItem() = StopListItem(
         id = "stop-list-item-id-3",
-        dishId = "dish-id-4",
+        dishRkId = "rk-dish-id-4",
         dishName = "Куриная отбивная",
         onStop = true,
         remainingCount = 0,

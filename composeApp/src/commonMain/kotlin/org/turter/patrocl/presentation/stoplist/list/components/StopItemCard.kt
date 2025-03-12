@@ -25,7 +25,7 @@ import org.turter.patrocl.utils.isSoon
 @Composable
 fun StopListItemCard(
     modifier: Modifier = Modifier,
-    selected: Boolean = true,
+    selected: Boolean = false,
     item: StopListItem,
     onClick: () -> Unit,
     onLongClick: () -> Unit
@@ -36,16 +36,17 @@ fun StopListItemCard(
     val until = item.until.let { if (it.isSoon()) it.formattedUntil() else "-" }
 
     val containerColor by animateColorAsState(
-        targetValue = if (selected) MaterialTheme.colorScheme.primaryContainer
-        else MaterialTheme.colorScheme.surfaceContainerHigh,
+        targetValue = if (selected) MaterialTheme.colorScheme.surfaceContainerHigh
+        else MaterialTheme.colorScheme.surface,
         animationSpec = tween(durationMillis = 300)
     )
 
-    val contentColor by animateColorAsState(
-        targetValue = if (selected) MaterialTheme.colorScheme.onPrimaryContainer
-        else MaterialTheme.colorScheme.onSurface,
-        animationSpec = tween(durationMillis = 300)
-    )
+    val contentColor = MaterialTheme.colorScheme.onSurface
+//    val contentColor by animateColorAsState(
+//        targetValue = if (selected) MaterialTheme.colorScheme.onSecondaryContainer
+//        else MaterialTheme.colorScheme.onSurface,
+//        animationSpec = tween(durationMillis = 300)
+//    )
 
     Card(
         modifier = modifier
@@ -53,13 +54,15 @@ fun StopListItemCard(
                 onClick = onClick,
                 onLongClick = onLongClick
             ),
-        colors = CardDefaults.cardColors(
-            containerColor = containerColor,
-            contentColor = contentColor
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 4.dp
-        )
+        colors = CardDefaults.outlinedCardColors(containerColor = containerColor),
+        border = CardDefaults.outlinedCardBorder()
+//        colors = CardDefaults.cardColors(
+//            containerColor = containerColor,
+//            contentColor = contentColor
+//        ),
+//        elevation = CardDefaults.cardElevation(
+//            defaultElevation = 4.dp
+//        )
     ) {
         Column(
             modifier = Modifier.padding(16.dp),

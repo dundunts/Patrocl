@@ -15,7 +15,8 @@ sealed class AuthUiEvent {
 }
 
 class AuthViewModel(
-    private val authService: AuthService
+    private val authService: AuthService,
+    private val postLoginNav: () -> Unit
 ) : ScreenModel {
     private val _screenState = MutableStateFlow<WelcomeScreenState>(WelcomeScreenState.Initial)
 
@@ -25,26 +26,26 @@ class AuthViewModel(
         screenModelScope.launch {
             authService.getAuthStateFlow()
                 .collect { authState ->
-                    _screenState.value = when (authState) {
-                        is AuthState.Authorized -> WelcomeScreenState.Authorized(user = authState.user)
-                        is AuthState.Forbidden -> WelcomeScreenState.Forbidden(
+                    when (authState) {
+                        is AuthState.Authorized -> postLoginNav()
+                        is AuthState.Forbidden -> _screenState.value = WelcomeScreenState.Forbidden(
                             authState.user,
                             authState.cause
                         )
 
-                        is AuthState.NoBindEmployee -> WelcomeScreenState.NoBindEmployee(
+                        is AuthState.NoBindEmployee -> _screenState.value = WelcomeScreenState.NoBindEmployee(
                             authState.user,
                             authState.cause
                         )
 
-                        is AuthState.NoBindWaiter -> WelcomeScreenState.NoBindWaiter(
+                        is AuthState.NoBindWaiter -> _screenState.value = WelcomeScreenState.NoBindWaiter(
                             authState.user,
                             authState.employee,
                             authState.cause
                         )
 
-                        is AuthState.NotAuthorized -> WelcomeScreenState.NotAuthorized(cause = authState.cause)
-                        else -> WelcomeScreenState.Loading
+                        is AuthState.NotAuthorized -> _screenState.value = WelcomeScreenState.NotAuthorized(cause = authState.cause)
+                        else -> _screenState.value = WelcomeScreenState.Loading
                     }
                 }
         }
@@ -60,7 +61,7 @@ class AuthViewModel(
     private fun login() {
         screenModelScope.launch {
             authService.authenticate()
-//                .onSuccess { toMainScreen() }
+                .onSuccess { postLoginNav() }
         }
     }
 

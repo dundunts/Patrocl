@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import cafe.adriel.voyager.navigator.Navigator
 import org.koin.compose.KoinContext
 import org.turter.patrocl.presentation.auth.WelcomeScreen
-import org.turter.patrocl.ui.theme.AppTheme
+import org.turter.patrocl.ui.theme.lazur.AppTheme
 
 @Composable
 fun App() {

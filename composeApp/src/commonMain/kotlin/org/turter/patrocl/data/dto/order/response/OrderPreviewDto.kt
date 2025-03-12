@@ -16,7 +16,7 @@ data class OrderPreviewDto(
     val rkPriceListSum: Int,
     val bill: Boolean,
     val finished: Boolean,
-    val openTime: LocalDateTime,
-    val createTime: LocalDateTime
+    val createTime: LocalDateTime,
+    val finishTime: LocalDateTime
 ) {
 }

@@ -76,9 +76,9 @@ fun SnackbarMessageHost(
             snackBarMessage?.let {
                 Snackbar(
                     snackbarData = snackbarData,
-                    containerColor = it.containerColor,
-                    contentColor = it.contentColor,
-                    actionColor = it.contentColor
+//                    containerColor = it.containerColor,
+//                    contentColor = it.contentColor,
+//                    actionColor = it.contentColor
                 )
             }
         }

@@ -26,8 +26,8 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun SwipeToDismissComponent(
     modifier: Modifier = Modifier,
-    onStartToEnd: () -> Unit,
-    onEndToStart: () -> Unit,
+    onStartToEnd: () -> Boolean,
+    onEndToStart: () -> Boolean,
     bg: @Composable (dismissState: SwipeToDismissBoxState) -> Unit = {},
     content: @Composable RowScope.() -> Unit
 ) {
@@ -35,18 +35,17 @@ fun SwipeToDismissComponent(
         confirmValueChange = {
             when(it) {
                 SwipeToDismissBoxValue.StartToEnd -> {
-                    onStartToEnd()
+                    return@rememberSwipeToDismissBoxState onStartToEnd()
                 }
                 SwipeToDismissBoxValue.EndToStart -> {
-                    onEndToStart()
+                    return@rememberSwipeToDismissBoxState onEndToStart()
                 }
                 SwipeToDismissBoxValue.Settled -> {
                     return@rememberSwipeToDismissBoxState false
                 }
             }
-            return@rememberSwipeToDismissBoxState true
         },
-        positionalThreshold = { it * .25f }
+        positionalThreshold = { it * 0.6f }
     )
     
     SwipeToDismissBox(
@@ -66,7 +65,6 @@ fun DismissBackground(
     startToEndColor: Color = Color.Transparent,
     endToStartColor: Color = Color.Transparent,
     settledColor: Color = Color.Transparent,
-
 ) {
     val color = when (dismissState.dismissDirection) {
         SwipeToDismissBoxValue.StartToEnd -> startToEndColor

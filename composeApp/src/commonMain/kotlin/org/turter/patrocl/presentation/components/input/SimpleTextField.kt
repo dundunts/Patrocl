@@ -1,4 +1,4 @@
-package org.turter.patrocl.presentation.components
+package org.turter.patrocl.presentation.components.input
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box

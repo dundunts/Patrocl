@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import org.turter.patrocl.data.local.config.RealmManager
 import org.turter.patrocl.data.local.entity.menu.ModifiersGroupLocal
+import org.turter.patrocl.data.local.entity.menu.ModifiersSchemeDetailsLocal
 import org.turter.patrocl.data.local.entity.menu.ModifiersSchemeLocal
 import org.turter.patrocl.data.local.handleMultiResult
 import org.turter.patrocl.data.local.logFetchingEntityListWith
@@ -27,18 +28,20 @@ class ModifiersSchemeLocalRepositoryImpl : ModifiersSchemeLocalRepository {
 
     override suspend fun replace(data: List<ModifiersSchemeLocal>) {
         cleanUp()
+        log.d { "Start writing to realm modifiers schemes and details, total elements: ${data.size}" }
         data.forEach { element ->
             realm.write {
-                log.d { "Write to realm Entity: $data" }
                 copyToRealm(element)
             }
         }
+        log.d { "Complete writing to realm modifiers scheme and details, total elements: ${data.size}" }
     }
 
     override suspend fun cleanUp() {
         log.d { "Start cleanup Entity" }
         realm.write {
             delete(this.query<ModifiersSchemeLocal>())
+            delete(this.query<ModifiersSchemeDetailsLocal>())
         }
     }
 }

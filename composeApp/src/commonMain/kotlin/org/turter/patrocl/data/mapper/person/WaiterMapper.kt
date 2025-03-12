@@ -41,7 +41,7 @@ fun List<WaiterInfoDto>.toWaiterLocalList(): List<WaiterLocal> =
 fun List<WaiterLocal>.toWaiterListFromLocal(): List<Waiter> = this.map { it.toWaiter() }.toList()
 
 fun Waiter.toOrderWaiter(): Order.Waiter = Order.Waiter(
-    id = rkId,
+    rkId = rkId,
     code = code,
     name = name,
     guid = guid

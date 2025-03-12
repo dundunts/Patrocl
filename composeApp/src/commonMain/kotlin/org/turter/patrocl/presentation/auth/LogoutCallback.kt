@@ -8,16 +8,18 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import co.touchlab.kermit.Logger
+import io.ktor.http.parametersOf
+import org.koin.core.parameter.parametersOf
 import org.turter.patrocl.presentation.components.CircularLoader
 
 class LogoutCallback: Screen {
-    val log = Logger.withTag("LogoutCallback")
+//    val log = Logger.withTag("LogoutCallback")
     @Composable
     override fun Content() {
-        val vm: AuthViewModel = koinScreenModel()
+        val vm: AuthViewModel = koinScreenModel{ parametersOf({ }) }
         val navigator = LocalNavigator.currentOrThrow
-        log.d { "Nav items: ${navigator.items}" }
-        log.d { "Nav parent: ${navigator.parent}" }
+//        log.d { "Nav items: ${navigator.items}" }
+//        log.d { "Nav parent: ${navigator.parent}" }
         LaunchedEffect(Unit) {
             vm.sendEvent(AuthUiEvent.Logout { navigator.replaceAll(WelcomeScreen()) } )
         }

@@ -8,12 +8,12 @@ import org.turter.patrocl.utils.now
 object OrderDataSupplier {
 
     fun getOrder(): Order {
-        val waiter = Order.Waiter(id = "waiter-id-1", code = "99", name = "Бобби", guid = "guid-1")
+        val waiter = Order.Waiter(rkId = "waiter-rkId-1", code = "99", name = "Бобби", guid = "guid-1")
         return Order(
             guid = "order-guid-1",
             name = "33.1",
             rkSum = 123450,
-            table = Order.Table(id = "table-id-1", name = "33", code = "table-code-1", guid = "guid-1"),
+            table = Order.Table(rkId = "rk-table-id-1", name = "33", code = "table-code-1", guid = "guid-1"),
             waiter = waiter,
             openTime = LocalDateTime.now(),
             rkUnpaidSum = 123450,
@@ -34,7 +34,7 @@ object OrderDataSupplier {
                     creator = waiter,
                     dishes = listOf(
                         Order.Dish(
-                            id = "dish-id-1",
+                            rkId = "rk-dish-id-1",
                             name = "Цезарь с курицей",
                             rkQuantity = 1000,
                             code = "dish-code-1",
@@ -46,7 +46,7 @@ object OrderDataSupplier {
                             modifiers = listOf()
                         ),
                         Order.Dish(
-                            id = "dish-id-3",
+                            rkId = "rk-dish-id-3",
                             name = "Буритто",
                             rkQuantity = 2000,
                             code = "dish-code-2",
@@ -57,7 +57,7 @@ object OrderDataSupplier {
                             uni = "dish-uni-1-2",
                             modifiers = listOf(
                                 Order.Dish.Modifier(
-                                    id = "modifier-id-1",
+                                    rkId = "rk-modifier-id-1",
                                     name = "В ОДНУ ТАРЕЛКУ",
                                     code = "code-1",
                                     guid = "guid-1",
@@ -77,10 +77,10 @@ object OrderDataSupplier {
                     startService = LocalDateTime.now(),
                     printed = true,
                     cookMins = 0,
-                    creator = Order.Waiter(id = "waiter-id-2", code = "133", name = "Билли", guid = "guid-1"),
+                    creator = Order.Waiter(rkId = "waiter-id-2", code = "133", name = "Билли", guid = "guid-1"),
                     dishes = listOf(
                         Order.Dish(
-                            id = "dish-id-3",
+                            rkId = "rk-dish-id-3",
                             name = "Буритто",
                             code = "dish-code-3",
                             rkQuantity = 2000,
@@ -92,7 +92,7 @@ object OrderDataSupplier {
                             modifiers = listOf()
                         ),
                         Order.Dish(
-                            id = "dish-id-4",
+                            rkId = "rk-dish-id-4",
                             name = "Куриная отбивная",
                             code = "dish-code-4",
                             rkQuantity = 1000,
@@ -103,7 +103,7 @@ object OrderDataSupplier {
                             uni = "dish-uni-2-2",
                             modifiers = listOf(
                                 Order.Dish.Modifier(
-                                    id = "modifier-id-2",
+                                    rkId = "rk-modifier-id-2",
                                     name = "ЗАМЕНА",
                                     code = "code-2",
                                     guid = "guid-2",
@@ -113,7 +113,7 @@ object OrderDataSupplier {
                             )
                         ),
                         Order.Dish(
-                            id = "dish-id-5",
+                            rkId = "rk-dish-id-5",
                             name = "Греча",
                             code = "dish-code-5",
                             rkQuantity = 1000,
@@ -124,7 +124,7 @@ object OrderDataSupplier {
                             uni = "dish-uni-2-3",
                             modifiers = listOf(
                                 Order.Dish.Modifier(
-                                    id = "modifier-id-1",
+                                    rkId = "rk-modifier-id-1",
                                     name = "В ОДНУ ТАРЕЛКУ",
                                     code = "code-3",
                                     guid = "guid-3",
@@ -132,7 +132,7 @@ object OrderDataSupplier {
                                     count = 1
                                 ),
                                 Order.Dish.Modifier(
-                                    id = "modifier-id-5",
+                                    rkId = "rk-modifier-id-5",
                                     name = "Не зажаривать",
                                     code = "code-4",
                                     guid = "guid-4",
@@ -157,7 +157,8 @@ object OrderDataSupplier {
             waiterName = "Бобби",
             rkSum = 123450,
             bill = false,
-            openTime = LocalDateTime.now()
+            createTime = LocalDateTime.now(),
+            finishTime = LocalDateTime.now()
         ),
         OrderPreview(
             guid = "order-guid-2",
@@ -168,7 +169,8 @@ object OrderDataSupplier {
             waiterName = "Билли",
             rkSum = 133650,
             bill = false,
-            openTime = LocalDateTime.now()
+            createTime = LocalDateTime.now(),
+            finishTime = LocalDateTime.now()
         ),
         OrderPreview(
             guid = "order-guid-3",
@@ -179,7 +181,8 @@ object OrderDataSupplier {
             waiterName = "Билли",
             rkSum = 2589950,
             bill = true,
-            openTime = LocalDateTime.now()
+            createTime = LocalDateTime.now(),
+            finishTime = LocalDateTime.now()
         ),
         OrderPreview(
             guid = "order-guid-4",
@@ -190,7 +193,8 @@ object OrderDataSupplier {
             waiterName = "Бобби",
             rkSum = 456200,
             bill = false,
-            openTime = LocalDateTime.now()
+            createTime = LocalDateTime.now(),
+            finishTime = LocalDateTime.now()
         ),
         OrderPreview(
             guid = "order-guid-5",
@@ -201,7 +205,80 @@ object OrderDataSupplier {
             waiterName = "Бобби",
             rkSum = 12678250,
             bill = true,
-            openTime = LocalDateTime.now()
+            createTime = LocalDateTime.now(),
+            finishTime = LocalDateTime.now()
+        ),
+        OrderPreview(
+            guid = "order-guid-6",
+            name = "33",
+            tableCode = "table-code-6",
+            tableName = "34",
+            waiterCode = "133",
+            waiterName = "Билли",
+            rkSum = 133650,
+            bill = false,
+            createTime = LocalDateTime.now(),
+            finishTime = LocalDateTime.now()
+        ),
+        OrderPreview(
+            guid = "order-guid-7",
+            name = "34.1",
+            tableCode = "table-code-7",
+            tableName = "34",
+            waiterCode = "133",
+            waiterName = "Билли",
+            rkSum = 2589950,
+            bill = true,
+            createTime = LocalDateTime.now(),
+            finishTime = LocalDateTime.now()
+        ),
+        OrderPreview(
+            guid = "order-guid-8",
+            name = "54",
+            tableCode = "table-code-3",
+            tableName = "54",
+            waiterCode = "99",
+            waiterName = "Бобби",
+            rkSum = 456200,
+            bill = false,
+            createTime = LocalDateTime.now(),
+            finishTime = LocalDateTime.now()
+        ),
+        OrderPreview(
+            guid = "order-guid-9",
+            name = "21",
+            tableCode = "table-code-4",
+            tableName = "21",
+            waiterCode = "99",
+            waiterName = "Бобби",
+            rkSum = 12678250,
+            bill = true,
+            createTime = LocalDateTime.now(),
+            finishTime = LocalDateTime.now()
+        ),
+        OrderPreview(
+            guid = "order-guid-10",
+            name = "21",
+            tableCode = "table-code-4",
+            tableName = "21",
+            waiterCode = "99",
+            waiterName = "Бобби",
+            rkSum = 12678250,
+            bill = true,
+            createTime = LocalDateTime.now(),
+            finishTime = LocalDateTime.now()
+        ),
+        OrderPreview(
+            guid = "order-guid-11",
+            name = "21",
+            tableCode = "table-code-4",
+            tableName = "21",
+            waiterCode = "99",
+            waiterName = "Бобби",
+            rkSum = 12678250,
+            bill = true,
+            createTime = LocalDateTime.now(),
+            finishTime = LocalDateTime.now()
         )
     )
 

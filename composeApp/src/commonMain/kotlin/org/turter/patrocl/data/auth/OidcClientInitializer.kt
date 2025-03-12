@@ -5,7 +5,8 @@ import org.publicvalue.multiplatform.oidc.types.CodeChallengeMethod
 
 class OidcClientInitializer {
     private val BASE_AUTH_URL = "http://92.255.107.65:8080/realms/TurterApp"
-    
+//    private val BASE_AUTH_URL = "http://192.168.0.103:8080/realms/TurterApp"
+
     val client = OpenIdConnectClient {
         endpoints {
             tokenEndpoint = "$BASE_AUTH_URL/protocol/openid-connect/token"

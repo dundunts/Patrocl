@@ -212,7 +212,7 @@ fun CreateStopListItemComponent(
     if (isDishPickerOpened) DishPickerModal(
         dishes = state.dishes,
         stopList = state.items,
-        selectedDishId = state.selectedDishId,
+        selectedDishId = state.selectedDishRkId,
         onDismiss = { isDishPickerOpened = false },
         onSelectDish = { vm.sendEvent(CreateStopListItemUiEvent.SelectDish(it)) }
     )

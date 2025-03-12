@@ -13,11 +13,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import org.turter.patrocl.presentation.auth.LogoutCallback
-import org.turter.patrocl.presentation.auth.WelcomeScreen
 import org.turter.patrocl.presentation.auth.logout
+import org.turter.patrocl.presentation.components.MainBottomTabNavigator
 import org.turter.patrocl.presentation.profile.ProfileScreenState
-import org.turter.patrocl.presentation.profile.ProfileUiEvent
 import org.turter.patrocl.presentation.profile.ProfileUiEvent.CloseChangePreferCompanyDialog
 import org.turter.patrocl.presentation.profile.ProfileUiEvent.ConfirmChangingPreferCompany
 import org.turter.patrocl.presentation.profile.ProfileUiEvent.OpenChangePreferCompanyDialog
@@ -73,7 +71,8 @@ fun ProfileContent(
 //                onLogout = { vm.sendEvent(ProfileUiEvent.Logout { navigator.replaceAll(WelcomeScreen()) }) }
                 onLogout = { navigator.logout() }
             )
-        }
+        },
+        bottomBar = { MainBottomTabNavigator() }
     ) { innerPadding ->
         Column(
             modifier = Modifier

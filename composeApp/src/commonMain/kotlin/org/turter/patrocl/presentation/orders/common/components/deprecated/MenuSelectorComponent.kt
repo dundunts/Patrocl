@@ -1,11 +1,10 @@
-package org.turter.patrocl.presentation.orders.common
+package org.turter.patrocl.presentation.orders.common.components.deprecated
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -19,7 +18,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,26 +29,50 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import org.turter.patrocl.domain.model.menu.deprecated.CategoryDetailed
-import org.turter.patrocl.domain.model.menu.deprecated.DishDetailed
-import org.turter.patrocl.presentation.components.SearchTextField
+import org.turter.patrocl.domain.model.menu.CategoryInfo
+import org.turter.patrocl.domain.model.menu.StationDishInfo
+import org.turter.patrocl.domain.model.stoplist.StopListItem
+import org.turter.patrocl.presentation.orders.common.DishWarningType
 
 @Composable
-fun MenuSelectorComponent(
+fun MenuTreeDishSelector(
     modifier: Modifier = Modifier,
-    rootCategory: CategoryDetailed,
-    allDishes: List<DishDetailed>,
-    onDishClick: (DishDetailed) -> Unit
+    rootCategoryId: String,
+    initCategoryId: String? = null,
+    categoriesMap: Map<String, CategoryInfo>,
+    dishesMap: Map<String, StationDishInfo>,
+    stopListMap: Map<String, StopListItem>,
+    onDishClick: (StationDishInfo) -> Unit
 ) {
-    var currentCategory by remember { mutableStateOf(rootCategory) }
-    val backStack by remember { mutableStateOf(ArrayDeque<CategoryDetailed>()) }
+    var currentCategory by remember {
+        mutableStateOf(
+            categoriesMap[initCategoryId ?: rootCategoryId]
+        )
+    }
+    var childCategories by remember {
+        mutableStateOf(currentCategory?.childIds?.mapNotNull { categoriesMap[it] }
+            ?.sortedBy { it.name } ?: listOf())
+    }
+    var childDishes by remember {
+        mutableStateOf(currentCategory?.dishIds?.mapNotNull { dishesMap[it] }
+            ?.sortedBy { it.name }
+            ?: listOf())
+    }
 
-    var searchQuary by remember { mutableStateOf("") }
-    var filteredDishes by remember { mutableStateOf(allDishes) }
-    filteredDishes = if (searchQuary.isEmpty()) {
-        currentCategory.dishes
-    } else {
-        allDishes.filter { dish -> dish.name.contains(other = searchQuary, ignoreCase = true) }
+    val setCategory: (categoryRkId: String) -> Unit = { id ->
+        categoriesMap[id]?.let { currentCategory = it }
+    }
+
+    val toParentCategory: () -> Unit = {
+        currentCategory?.mainParentIdent?.let { categoriesMap[it] }?.let { currentCategory = it }
+    }
+
+    val isToParentCategoryAvailable = currentCategory?.mainParentIdent
+        ?.let(categoriesMap::containsKey) ?: false
+
+    val getDishWarningType: (dishRkId: String) -> DishWarningType = { dishRkId ->
+        stopListMap[dishRkId]?.let { DishWarningType.of(it.onStop, it.remainingCount) }
+            ?: DishWarningType.None
     }
 
     Surface(
@@ -59,30 +81,19 @@ fun MenuSelectorComponent(
             .padding(horizontal = 8.dp)
     ) {
         Column {
-            SearchTextField(
-                modifier = Modifier
-                    .height(ButtonDefaults.MinHeight)
-                    .padding(bottom = 4.dp)
-                    .fillMaxWidth(),
-                value = searchQuary,
-                onValueChange = { searchQuary = it },
-                placeholder = { Text(text = "Блюдо...") },
-                textColor = MaterialTheme.colorScheme.onSurface,
-                colors = OutlinedTextFieldDefaults.colors()
-            )
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                if (backStack.isNotEmpty()) item {
+                if (isToParentCategoryAvailable) item {
                     Button(
                         shape = RoundedCornerShape(4.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.surfaceVariant,
                             contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                         ),
-                        onClick = { currentCategory = backStack.removeLast() }
+                        onClick = toParentCategory
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -90,16 +101,13 @@ fun MenuSelectorComponent(
                         )
                     }
                 }
-                if (searchQuary.isEmpty()) items(
-                    items = currentCategory.childList,
+                items(
+                    items = childCategories,
                     key = { it.guid }
                 ) { category ->
                     Button(
                         modifier = Modifier.fillMaxWidth(),
-                        onClick = {
-                            backStack.addLast(currentCategory)
-                            currentCategory = category
-                        },
+                        onClick = { setCategory(category.rkId) },
                         shape = RoundedCornerShape(4.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -110,13 +118,13 @@ fun MenuSelectorComponent(
                     }
                 }
                 items(
-                    items = filteredDishes,
+                    items = childDishes,
                     key = { it.guid }
                 ) { dish ->
                     DishComponent(
                         modifier = Modifier.fillMaxWidth(),
                         name = dish.name,
-                        type = DishWarningType.of(dish.onStop, dish.remainingCount),
+                        type = getDishWarningType(dish.id),
                         onClick = { onDishClick(dish) }
                     )
                 }
@@ -159,14 +167,3 @@ private fun DishComponent(
     }
 }
 
-sealed class DishWarningType {
-    data object None : DishWarningType()
-    data object OnStop : DishWarningType()
-    data object LowRemain : DishWarningType()
-
-    companion object {
-        fun of(onStop: Boolean, remainCount: Int) = if (onStop) OnStop
-        else if (remainCount < 5) LowRemain
-        else None
-    }
-}

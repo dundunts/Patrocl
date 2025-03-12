@@ -1,12 +1,10 @@
 package org.turter.patrocl.data.mapper.order
 
-import org.turter.patrocl.data.dto.order.request.OrderItemPayload
 import org.turter.patrocl.data.dto.order.request.OrderSessionPayload
 import org.turter.patrocl.data.dto.order.request.RemoveItemsFromOrderPayload
 import org.turter.patrocl.data.dto.order.response.OrderDto
 import org.turter.patrocl.domain.model.order.NewOrderItem
 import org.turter.patrocl.domain.model.order.Order
-import org.turter.patrocl.domain.model.order.OrderItemForRemove
 import org.turter.patrocl.domain.model.order.RemoveOrderItemsSession
 
 fun OrderDto.Session.toSession() =
@@ -24,7 +22,7 @@ fun OrderDto.Session.toSession() =
     )
 
 fun OrderDto.Dish.toDish() = Order.Dish(
-    id = id,
+    rkId = id,
     name = name,
     guid = guid,
     rkQuantity = rkQuantity,
@@ -37,7 +35,7 @@ fun OrderDto.Dish.toDish() = Order.Dish(
 )
 
 fun OrderDto.Dish.Modifier.toModifier() = Order.Dish.Modifier(
-    id = id,
+    rkId = id,
     name = name,
     guid = guid,
     code = code,

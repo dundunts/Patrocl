@@ -17,6 +17,7 @@ fun ModifierGroupInfoDto.toModifiersGroupInfo(): ModifierGroupInfo =
         name = name,
         status = status,
         mainParentIdent = mainParentIdent,
+        commonModifier = commonModifier,
         childIds = childIds.toList(),
         modifierIds = modifierIds.toList()
     )
@@ -30,6 +31,7 @@ fun ModifierGroupInfoDto.toModifiersGroupLocal(): ModifiersGroupLocal =
         target.name = name
         target.status = status
         target.mainParentIdent = mainParentIdent
+        target.commonModifier = commonModifier
         target.childIds = childIds.toRealmList()
         target.modifierIds = modifierIds.toRealmList()
         return@let target
@@ -44,6 +46,7 @@ fun ModifiersGroupLocal.toModifiersGroupInfo(): ModifierGroupInfo =
         name = name,
         status = status,
         mainParentIdent = mainParentIdent,
+        commonModifier = commonModifier,
         childIds = childIds.toList(),
         modifierIds = modifierIds.toList()
     )

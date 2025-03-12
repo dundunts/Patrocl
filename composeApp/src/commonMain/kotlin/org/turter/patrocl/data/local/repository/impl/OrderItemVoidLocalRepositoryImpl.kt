@@ -27,12 +27,13 @@ class OrderItemVoidLocalRepositoryImpl : OrderItemVoidLocalRepository {
 
     override suspend fun replace(data: List<OrderItemVoidLocal>) {
         cleanUp()
+        log.d { "Start writing to realm order item voids, total elements: ${data.size}" }
         data.forEach { element ->
             realm.write {
-                log.d { "Write to realm Entity: $data" }
                 copyToRealm(element)
             }
         }
+        log.d { "Complete writing to realm order item voids, total elements: ${data.size}" }
     }
 
     override suspend fun cleanUp() {

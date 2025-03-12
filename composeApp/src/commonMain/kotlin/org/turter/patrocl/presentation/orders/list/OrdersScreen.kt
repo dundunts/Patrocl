@@ -18,9 +18,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
@@ -29,10 +26,12 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import org.turter.patrocl.presentation.components.CircularLoader
 import org.turter.patrocl.presentation.error.ErrorComponent
+import org.turter.patrocl.presentation.components.MainBottomTabNavigator
 import org.turter.patrocl.presentation.orders.create.CreateOrderScreen
 import org.turter.patrocl.presentation.orders.edit.EditOrderScreen
 import org.turter.patrocl.presentation.orders.list.components.OrderCard
 import org.turter.patrocl.presentation.orders.list.components.OrdersHeader
+import org.turter.patrocl.presentation.orders.list.components.WaiterNotLoggedInOnStationComponent
 import org.turter.patrocl.presentation.orders.read.ReadOrderScreen
 
 class OrdersScreen : Screen {
@@ -41,32 +40,45 @@ class OrdersScreen : Screen {
         val vm: OrdersViewModel = koinScreenModel()
         val navigator = LocalNavigator.currentOrThrow
 
-        var ordersFilter by remember { mutableStateOf(OrdersFilter()) }
+//        var ordersFilter by remember { mutableStateOf(OrdersFilter()) }
+
+        val state by vm.screenState.collectAsState()
+        val currentState = state
+        //TODO remove
+//        navigator.push(EditOrderScreen("123"))
 
         Scaffold(
             topBar = {
-                OrdersHeader(
-                    currentOrdersFilter = ordersFilter,
-                    onRefreshData = { vm.sendEvent(OrdersUiEvent.RefreshOrders) },
-                    setNewFilter = { newFilter -> ordersFilter = newFilter }
-                )
+                if (currentState is OrdersScreenState.Content) {
+                    OrdersHeader(
+                        currentOrdersFilter = currentState.filter,
+                        onRefreshData = { vm.sendEvent(OrdersUiEvent.RefreshOrders) },
+                        setNewFilter = { vm.sendEvent(OrdersUiEvent.SetFilter(it)) }
+                    )
+                }
             },
             floatingActionButton = {
-                FloatingActionButton(
-                    onClick = { navigator.push(CreateOrderScreen()) }
-                ) {
-                    Icon(imageVector = Icons.Default.Add, contentDescription = "Add icon")
+                if (state is OrdersScreenState.Content) {
+                    FloatingActionButton(
+                        onClick = { navigator.push(CreateOrderScreen()) }
+                    ) {
+                        Icon(imageVector = Icons.Default.Add, contentDescription = "Add icon")
+                    }
                 }
-            }
+            },
+            bottomBar = { MainBottomTabNavigator() }
         ) { paddingValues ->
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
             ) {
-                when (val currentState = vm.screenState.collectAsState().value) {
+                when (currentState) {
                     is OrdersScreenState.Content -> {
-                        val orders = ordersFilter.filter(orders = currentState.orders, waiter = currentState.waiter)
+                        val orders = currentState.filter.filter(
+                            orders = currentState.orders,
+                            waiter = currentState.waiter
+                        )
                         LazyVerticalGrid(
                             columns = GridCells.Fixed(2),
                             contentPadding = PaddingValues(
@@ -96,6 +108,12 @@ class OrdersScreen : Screen {
                                 Spacer(modifier = Modifier.height(88.dp))
                             }
                         }
+                    }
+
+                    is OrdersScreenState.NotLoggedInOnStation -> {
+                        WaiterNotLoggedInOnStationComponent(
+                            onRefresh = { vm.sendEvent(OrdersUiEvent.CheckWaiterLoggedInOnStation) }
+                        )
                     }
 
                     is OrdersScreenState.Error -> {

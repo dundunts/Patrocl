@@ -47,7 +47,7 @@ fun List<TableInfoDto>.toTableLocalList(): List<TableLocal> = this.map { it.toTa
 fun List<TableLocal>.toTableInfoListFromLocal(): List<TableInfo> = this.map { it.toTableInfo() }.toList()
 
 fun TableInfo.toOrderTable(): Order.Table = Order.Table(
-    id = rkId,
+    rkId = rkId,
     code = code,
     name = name,
     guid = guid

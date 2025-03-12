@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.getScreenModel
+import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import org.turter.patrocl.presentation.components.CircularLoader
@@ -16,7 +17,7 @@ class StopListScreen : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val vm: StopListViewModel = getScreenModel()
+        val vm: StopListViewModel = koinScreenModel()
 
         when (val currentScreenState = vm.screenState.collectAsState().value) {
             is StopListScreenState.Main -> {

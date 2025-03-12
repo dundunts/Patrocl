@@ -51,6 +51,8 @@ class WaiterServiceMock: WaiterService {
 
     override suspend fun checkStationWaiterStatus() {
         stationWaiterStatus.value = StationWaiterStatus.Loading
+        delay(300)
+        stationWaiterStatus.value = StationWaiterStatus.LoggedIn
     }
 
     override fun getLoggedInWaitersInSameStation(): StateFlow<FetchState<List<Waiter>>> {

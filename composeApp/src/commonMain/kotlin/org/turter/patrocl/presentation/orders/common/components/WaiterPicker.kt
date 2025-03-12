@@ -1,4 +1,4 @@
-package org.turter.patrocl.presentation.orders.common
+package org.turter.patrocl.presentation.orders.common.components
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
@@ -13,9 +13,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -28,62 +26,29 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import org.turter.patrocl.domain.model.hall.deprecated.Table
-import org.turter.patrocl.presentation.components.SearchTextField
+import org.turter.patrocl.domain.model.person.Waiter
+import org.turter.patrocl.presentation.components.input.SearchTextField
 import org.turter.patrocl.presentation.components.dialog.FullscreenDialog
-import org.turter.patrocl.ui.icons.Table_restaurant
+import org.turter.patrocl.ui.icons.Person_apron
 
 @Composable
-fun SelectTableComponent(
-    modifier: Modifier = Modifier,
-    colors: ButtonColors = ButtonDefaults.outlinedButtonColors(),
-    tables: List<Table>,
-    selectedTable: Table? = null,
-    enabled: Boolean = true,
-    onSelectTable: (Table) -> Unit
-) {
-    var isTablePickerOpened by remember { mutableStateOf(false) }
-
-    FilledTonalButton(
-        modifier = modifier,
-        shape = RoundedCornerShape(4.dp),
-        enabled = enabled,
-        colors = colors,
-        onClick = { isTablePickerOpened = true }
-    ) {
-        Text(
-            modifier = Modifier.fillMaxWidth(),
-            text = "Стол: ${selectedTable?.name ?: "не выбран"}"
-        )
-    }
-
-    TablePickerDialog(
-        isOpened = isTablePickerOpened,
-        tables = tables,
-        selectedTable = selectedTable,
-        onDismiss = { isTablePickerOpened = false },
-        onSelectTable = onSelectTable
-    )
-}
-
-@Composable
-fun TablePickerDialog(
+fun WaiterPickerDialog(
     isOpened: Boolean,
-    tables: List<Table>,
-    selectedTable: Table?,
+    waiters: List<Waiter>,
+    selectedWaiter: Waiter,
     onDismiss: () -> Unit,
-    onSelectTable: (Table) -> Unit
+    onSelectWaiter: (Waiter) -> Unit
 ) {
     var searchString by remember { mutableStateOf("") }
-    var newSelectedTable by remember { mutableStateOf(selectedTable) }
-    val filteredTables = tables
+    var newSelectedWaiter by remember { mutableStateOf(selectedWaiter) }
+    val filteredWaiters = waiters
         .filter { if (searchString.isNotEmpty()) it.name.contains(searchString) else true }
         .toList()
 
     if (isOpened) {
         FullscreenDialog(
-            icon = { Icon(imageVector = Table_restaurant, contentDescription = "Table icon") },
-            label = "Выбор стола",
+            icon = { Icon(imageVector = Person_apron, contentDescription = "Waiter icon") },
+            label = "Выбор официанта",
             content = {
                 Column(modifier = Modifier.fillMaxSize()) {
                     SearchTextField(
@@ -92,7 +57,7 @@ fun TablePickerDialog(
                             .height(40.dp),
                         value = searchString,
                         onValueChange = { searchString = it },
-                        placeholder = { Text(text = "Название...") },
+                        placeholder = { Text(text = "Имя...") },
                         textColor = MaterialTheme.colorScheme.onSurface,
                         colors = OutlinedTextFieldDefaults.colors()
                     )
@@ -106,12 +71,13 @@ fun TablePickerDialog(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        items(items = filteredTables, key = { it.guid }) { table ->
-                            TablePickerElement(
-                                isSelect = table.guid == newSelectedTable?.guid,
-                                tableName = table.name,
+                        items(items = filteredWaiters, key = { it.guid }) { waiter ->
+                            WaiterPickerElement(
+                                modifier = Modifier.height(80.dp),
+                                isSelect = waiter.guid == newSelectedWaiter?.guid,
+                                waiterName = waiter.name,
                                 onClick = {
-                                    newSelectedTable = table
+                                    newSelectedWaiter = waiter
                                 }
                             )
                         }
@@ -119,22 +85,19 @@ fun TablePickerDialog(
                 }
             },
             onDismiss = onDismiss,
-            confirmEnabled = newSelectedTable != null,
             onConfirm = {
-                newSelectedTable?.let {
-                    onSelectTable(it)
-                    onDismiss()
-                }
+                onSelectWaiter(newSelectedWaiter)
+                onDismiss()
             }
         )
     }
 }
 
 @Composable
-private fun TablePickerElement(
+private fun WaiterPickerElement(
     modifier: Modifier = Modifier,
     isSelect: Boolean,
-    tableName: String,
+    waiterName: String,
     onClick: () -> Unit
 ) {
     val containerColor by animateColorAsState(
@@ -158,6 +121,6 @@ private fun TablePickerElement(
         ),
         shape = RoundedCornerShape(4.dp)
     ) {
-        Text(text = tableName, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(text = waiterName, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }

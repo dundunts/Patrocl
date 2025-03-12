@@ -24,23 +24,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import org.turter.patrocl.domain.model.order.NewOrderItem
+import org.turter.patrocl.presentation.orders.common.CommonOrderUiEvent
 import org.turter.patrocl.ui.icons.Restaurant_menu
 
 sealed class EditOrderTopAppBarState {
     data class Default(
         val orderName: String,
         val waiterName: String,
-//        val sum: Float,
-        val onBack: () -> Unit,
-        val onMenuOpen: () -> Unit
-    ) : EditOrderTopAppBarState()
-
-    data class NewItemSelected(
-        val selectedItem: NewOrderItem,
-        val onClose: () -> Unit,
-        val onMoveUp: () -> Unit,
-        val onMoveDown: () -> Unit,
-        val onInfo: () -> Unit
+        val tableName: String,
+        val onBack: () -> Unit
     ) : EditOrderTopAppBarState()
 
     data class SavedItemsSelected(
@@ -71,17 +63,8 @@ fun EditOrderTopAppBar(
             is EditOrderTopAppBarState.Default -> DefaultTopAppBar(
                 orderName = targetState.orderName,
                 waiterName = targetState.waiterName,
-//                sum = targetState.sum,
-                onMenuOpen = targetState.onMenuOpen,
+                tableName = targetState.tableName,
                 onBack = targetState.onBack
-            )
-
-            is EditOrderTopAppBarState.NewItemSelected -> SelectedNewItemTopAppBar(
-                selectedItem = targetState.selectedItem,
-                onClose = targetState.onClose,
-                onMoveUp = targetState.onMoveUp,
-                onMoveDown = targetState.onMoveDown,
-                onInfo = targetState.onInfo
             )
 
             is EditOrderTopAppBarState.SavedItemsSelected -> SavedItemsSelectedTopAppBar(
@@ -105,11 +88,18 @@ fun EditOrderTopAppBar(
 private fun DefaultTopAppBar(
     orderName: String,
     waiterName: String,
-//    sum: Float,
-    onBack: () -> Unit,
-    onMenuOpen: () -> Unit
+    tableName: String?,
+    onBack: () -> Unit
 ) {
     TopAppBar(
+        navigationIcon = {
+            IconButton(onClick = onBack) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Default.ArrowBack,
+                    contentDescription = "Back icon"
+                )
+            }
+        },
         title = {
             Column {
                 Text(
@@ -118,102 +108,75 @@ private fun DefaultTopAppBar(
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
-                    text = "Официант: $waiterName",
-                    fontSize = MaterialTheme.typography.bodyLarge.fontSize
-                )
-//                Row {
-//                    Spacer(Modifier.width(8.dp))
-//                    Text(
-//                        text = "Сумма: ${sum.toFormattedString(2)}",
-//                        fontSize = MaterialTheme.typography.bodyLarge.fontSize
-//                    )
-//                }
-            }
-        },
-        navigationIcon = {
-            IconButton(onClick = onBack) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back icon"
+                    text = "Стол: $tableName. Официант: $waiterName",
+                    fontSize = MaterialTheme.typography.bodyLarge.fontSize,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
-        },
-        actions = {
-            IconButton(
-                onClick = onMenuOpen
-            ) {
-                Icon(
-                    imageVector = Restaurant_menu,
-                    contentDescription = "Menu icon"
-                )
-            }
-        },
-        colors = topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest
-        )
+        }
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun SelectedNewItemTopAppBar(
-    selectedItem: NewOrderItem,
-    onClose: () -> Unit,
-    onMoveUp: () -> Unit,
-    onMoveDown: () -> Unit,
-    onInfo: () -> Unit,
-) {
-    TopAppBar(
-        title = {
-            Column {
-                Text(
-                    text = selectedItem.dishName,
-                    fontSize = MaterialTheme.typography.titleLarge.fontSize,
-                    fontWeight = FontWeight.SemiBold,
-                    overflow = TextOverflow.Ellipsis,
-                    maxLines = 1
-                )
-                Text(
-                    text = "Кол-во: ${selectedItem.rkQuantity}",
-                    fontSize = MaterialTheme.typography.bodyLarge.fontSize,
-                    overflow = TextOverflow.Ellipsis,
-                    maxLines = 1
-                )
-            }
-        },
-        navigationIcon = {
-            IconButton(onClick = onClose) {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = "Close icon"
-                )
-            }
-        },
-        actions = {
-            IconButton(onClick = onMoveUp) {
-                Icon(
-                    imageVector = Icons.Default.KeyboardArrowUp,
-                    contentDescription = "Arrow up icon"
-                )
-            }
-            IconButton(onClick = onMoveDown) {
-                Icon(
-                    imageVector = Icons.Default.KeyboardArrowDown,
-                    contentDescription = "Arrow down icon"
-                )
-            }
-            IconButton(onClick = onInfo) {
-                Icon(
-                    imageVector = Icons.Default.Info,
-                    contentDescription = "Info icon"
-                )
-            }
-        },
-        colors = topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest
-        )
-    )
-}
+//@OptIn(ExperimentalMaterial3Api::class)
+//@Composable
+//private fun SelectedNewItemTopAppBar(
+//    selectedItem: NewOrderItem,
+//    onClose: () -> Unit,
+//    onMoveUp: () -> Unit,
+//    onMoveDown: () -> Unit,
+//    onInfo: () -> Unit,
+//) {
+//    TopAppBar(
+//        title = {
+//            Column {
+//                Text(
+//                    text = selectedItem.dishName,
+//                    fontSize = MaterialTheme.typography.titleLarge.fontSize,
+//                    fontWeight = FontWeight.SemiBold,
+//                    overflow = TextOverflow.Ellipsis,
+//                    maxLines = 1
+//                )
+//                Text(
+//                    text = "Кол-во: ${selectedItem.rkQuantity}",
+//                    fontSize = MaterialTheme.typography.bodyLarge.fontSize,
+//                    overflow = TextOverflow.Ellipsis,
+//                    maxLines = 1
+//                )
+//            }
+//        },
+//        navigationIcon = {
+//            IconButton(onClick = onClose) {
+//                Icon(
+//                    imageVector = Icons.Default.Close,
+//                    contentDescription = "Close icon"
+//                )
+//            }
+//        },
+//        actions = {
+//            IconButton(onClick = onMoveUp) {
+//                Icon(
+//                    imageVector = Icons.Default.KeyboardArrowUp,
+//                    contentDescription = "Arrow up icon"
+//                )
+//            }
+//            IconButton(onClick = onMoveDown) {
+//                Icon(
+//                    imageVector = Icons.Default.KeyboardArrowDown,
+//                    contentDescription = "Arrow down icon"
+//                )
+//            }
+//            IconButton(onClick = onInfo) {
+//                Icon(
+//                    imageVector = Icons.Default.Info,
+//                    contentDescription = "Info icon"
+//                )
+//            }
+//        },
+//        colors = topAppBarColors(
+//            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest
+//        )
+//    )
+//}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -248,9 +211,9 @@ private fun SavedItemsSelectedTopAppBar(
                 )
             }
         },
-        colors = topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest
-        )
+//        colors = topAppBarColors(
+//            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest
+//        )
     )
 }
 
@@ -296,9 +259,9 @@ private fun SingleSelectedSavedItemTopAppBar(
                 )
             }
         },
-        colors = topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest
-        )
+//        colors = topAppBarColors(
+//            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest
+//        )
     )
 }
 

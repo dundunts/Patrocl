@@ -31,7 +31,6 @@ import org.turter.patrocl.domain.model.menu.ModifierSchemeInfo
 import org.turter.patrocl.domain.model.menu.ModifiersGroupsTreeData
 import org.turter.patrocl.domain.model.menu.StationDishInfo
 import org.turter.patrocl.domain.model.menu.StationModifierInfo
-import org.turter.patrocl.domain.model.menu.deprecated.MenuData
 import org.turter.patrocl.domain.model.stoplist.StopListItem
 import org.turter.patrocl.domain.model.voids.OrderItemVoidInfo
 import org.turter.patrocl.domain.service.MenuService
@@ -190,7 +189,7 @@ class MenuServiceImpl(
             modifiersRkIdMap = modifiers.associateBy { it.rkId },
             modifiersSchemeRkIdMap = modifiersSchemes.associateBy { it.rkId },
             orderItemVoids = voids,
-            stopListDishRkIdMap = stopList.associateBy { it.dishId }
+            stopListDishRkIdMap = stopList.associateBy { it.dishRkId }
         )
     }
 }

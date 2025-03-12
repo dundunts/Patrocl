@@ -17,7 +17,7 @@ import org.turter.patrocl.presentation.error.ErrorType
 import org.turter.patrocl.utils.now
 
 sealed class CreateStopListItemUiEvent {
-    data class SelectDish(val id: String) : CreateStopListItemUiEvent()
+    data class SelectDish(val rkId: String) : CreateStopListItemUiEvent()
     data class SetRemainCount(val count: Int) : CreateStopListItemUiEvent()
     data class SetUntil(val value: LocalDateTime?) : CreateStopListItemUiEvent()
     data class Create(val action: () -> Unit) : CreateStopListItemUiEvent()
@@ -36,26 +36,26 @@ class CreateStopListItemViewModel(
         MutableStateFlow<CreateStopListItemScreenState>(CreateStopListItemScreenState.Initial)
     val screenState: StateFlow<CreateStopListItemScreenState> = _screenState.asStateFlow()
 
-//    init {
-//        coroutineScope.launch {
-//            dishFetcher.getStateFlow().collect { fetchState ->
-//                _screenState.value = when (fetchState) {
-//                    is FetchState.Finished -> fetchState.result.fold(
-//                        onSuccess = {
-//                            CreateStopListItemScreenState.Main(items = currentStopList, dishes = it)
-//                        },
-//                        onFailure = { CreateStopListItemScreenState.Error(ErrorType.from(it)) }
-//                    )
-//
-//                    else -> CreateStopListItemScreenState.Loading
-//                }
-//            }
-//        }
-//    }
+    init {
+        coroutineScope.launch {
+            dishFetcher.getStateFlow().collect { fetchState ->
+                _screenState.value = when (fetchState) {
+                    is FetchState.Finished -> fetchState.result.fold(
+                        onSuccess = {
+                            CreateStopListItemScreenState.Main(items = currentStopList, dishes = it)
+                        },
+                        onFailure = { CreateStopListItemScreenState.Error(ErrorType.from(it)) }
+                    )
+
+                    else -> CreateStopListItemScreenState.Loading
+                }
+            }
+        }
+    }
 
     fun sendEvent(event: CreateStopListItemUiEvent) {
         when (event) {
-            is CreateStopListItemUiEvent.SelectDish -> selectDish(id = event.id)
+            is CreateStopListItemUiEvent.SelectDish -> selectDish(rkId = event.rkId)
             is CreateStopListItemUiEvent.SetRemainCount -> setRemainCount(count = event.count)
             is CreateStopListItemUiEvent.SetUntil -> setUntil(value = event.value)
             is CreateStopListItemUiEvent.Create -> createItem(event.action)
@@ -63,8 +63,8 @@ class CreateStopListItemViewModel(
         }
     }
 
-    private fun selectDish(id: String) {
-        transformMainState { it.copy(selectedDishId = id) }
+    private fun selectDish(rkId: String) {
+        transformMainState { it.copy(selectedDishRkId = rkId) }
     }
 
     private fun setRemainCount(count: Int) {
@@ -77,12 +77,12 @@ class CreateStopListItemViewModel(
 
     private fun createItem(action: () -> Unit) {
         withMainState()?.apply {
-            if (isDishNotInStopList(selectedDishId) && dishes.any { it.id == selectedDishId })
+            if (isDishNotInStopList(selectedDishRkId) && dishes.any { it.rkId == selectedDishRkId })
                 coroutineScope.launch {
                     setCreating(true)
                     stopListService.createNewItem(
                         item = NewStopListItem(
-                            dishId = selectedDishId,
+                            dishId = selectedDishRkId,
                             remainingCount = remainCount,
                             until = until
                         )

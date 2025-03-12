@@ -14,6 +14,7 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import org.koin.core.parameter.parametersOf
 import org.turter.patrocl.presentation.auth.components.EmployeeNotBoundPage
 import org.turter.patrocl.presentation.auth.components.ForbiddenPage
 import org.turter.patrocl.presentation.auth.components.LoginPage
@@ -24,9 +25,10 @@ import org.turter.patrocl.presentation.main.MainScreen
 class WelcomeScreen : Screen {
     @Composable
     override fun Content() {
-        val vm: AuthViewModel = koinScreenModel()
-
         val navigator = LocalNavigator.currentOrThrow
+
+        val vm: AuthViewModel = koinScreenModel{ parametersOf({navigator.replaceAll(MainScreen())}) }
+
         val screenState by vm.screenState.collectAsState()
 
         AnimatedContent(
@@ -50,7 +52,7 @@ class WelcomeScreen : Screen {
             }
         ) { state ->
             when (state) {
-                is WelcomeScreenState.Authorized -> navigator.replaceAll(MainScreen())
+//                is WelcomeScreenState.Authorized -> navigator.replaceAll(MainScreen())
 
                 is WelcomeScreenState.NotAuthorized -> LoginPage(
                     onLogin = { vm.sendEvent(AuthUiEvent.Login) }

@@ -14,6 +14,7 @@ class ModifiersGroupLocal: RealmObject {
     var name: String = ""
     var status: String = ""
     var mainParentIdent: String = ""
+    var commonModifier: Boolean = false
     var childIds: RealmList<String> = realmListOf()
     var modifierIds: RealmList<String> = realmListOf()
 }

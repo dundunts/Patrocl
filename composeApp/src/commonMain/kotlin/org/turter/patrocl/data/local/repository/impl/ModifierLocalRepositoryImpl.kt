@@ -26,12 +26,13 @@ class ModifierLocalRepositoryImpl : ModifierLocalRepository {
 
     override suspend fun replace(data: List<ModifierLocal>) {
         cleanUp()
+        log.d { "Start writing to realm modifiers, total elements: ${data.size}" }
         data.forEach { element ->
             realm.write {
-                log.d { "Write to realm Entity: $data" }
                 copyToRealm(element)
             }
         }
+        log.d { "Complete writing to realm modifiers, total elements: ${data.size}" }
     }
 
     override suspend fun cleanUp() {

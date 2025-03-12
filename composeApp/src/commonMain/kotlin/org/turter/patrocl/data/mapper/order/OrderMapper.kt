@@ -31,7 +31,8 @@ fun OrderPreviewDto.toOrderPreview(): OrderPreview = OrderPreview(
     waiterName = waiterName,
     rkSum = rkSum,
     bill = bill,
-    openTime = openTime
+    createTime = createTime,
+    finishTime = finishTime
 )
 
 fun List<OrderPreviewDto>.toOrderList(): List<OrderPreview> = map(OrderPreviewDto::toOrderPreview)
@@ -49,14 +50,14 @@ fun toCreateOrderPayload(
 }
 
 fun OrderDto.Table.toOrderTable(): Order.Table = Order.Table(
-    id = id,
+    rkId = id,
     code = code,
     name = name,
     guid = guid
 )
 
 fun OrderDto.Waiter.toOrderWaiter(): Order.Waiter = Order.Waiter(
-    id = id,
+    rkId = id,
     code = code,
     name = name,
     guid = guid

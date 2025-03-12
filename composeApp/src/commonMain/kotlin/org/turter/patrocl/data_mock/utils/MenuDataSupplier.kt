@@ -22,7 +22,7 @@ object MenuDataSupplier {
             code = "dish-code-1",
             name = "Цезарь с курицей",
             status = "ok",
-            mainParentIdent = "category-id-1",
+            mainParentIdent = "rk-category-id-1",
             kurs = "",
             qntDecDigits = 0,
             modiScheme = "",
@@ -37,7 +37,7 @@ object MenuDataSupplier {
             code = "dish-code-2",
             name = "Салат с куриной печенью",
             status = "ok",
-            mainParentIdent = "category-id-1",
+            mainParentIdent = "rk-category-id-1",
             kurs = "",
             qntDecDigits = 0,
             modiScheme = "",
@@ -52,7 +52,7 @@ object MenuDataSupplier {
             code = "dish-code-3",
             name = "Буритто",
             status = "ok",
-            mainParentIdent = "category-id-2",
+            mainParentIdent = "rk-category-id-2",
             kurs = "",
             qntDecDigits = 0,
             modiScheme = "",
@@ -67,7 +67,7 @@ object MenuDataSupplier {
             code = "dish-code-4",
             name = "Куриная отбивная",
             status = "ok",
-            mainParentIdent = "category-id-2",
+            mainParentIdent = "rk-category-id-2",
             kurs = "",
             qntDecDigits = 0,
             modiScheme = "",
@@ -82,7 +82,7 @@ object MenuDataSupplier {
             code = "dish-code-5",
             name = "Греча",
             status = "ok",
-            mainParentIdent = "category-id-3",
+            mainParentIdent = "rk-category-id-3",
             kurs = "",
             qntDecDigits = 0,
             modiScheme = "",
@@ -97,7 +97,7 @@ object MenuDataSupplier {
             code = "dish-code-6",
             name = "Рис",
             status = "ok",
-            mainParentIdent = "category-id-3",
+            mainParentIdent = "rk-category-id-3",
             kurs = "",
             qntDecDigits = 0,
             modiScheme = "",
@@ -112,7 +112,7 @@ object MenuDataSupplier {
             code = "dish-code-7",
             name = "Картофель айдахо",
             status = "ok",
-            mainParentIdent = "category-id-3",
+            mainParentIdent = "rk-category-id-3",
             kurs = "",
             qntDecDigits = 0,
             modiScheme = "",
@@ -127,7 +127,7 @@ object MenuDataSupplier {
             code = "dish-code-8",
             name = "Филе миньон",
             status = "ok",
-            mainParentIdent = "category-id-2",
+            mainParentIdent = "rk-category-id-2",
             kurs = "",
             qntDecDigits = 0,
             modiScheme = "rk-modifier-scheme-id-1",
@@ -142,7 +142,7 @@ object MenuDataSupplier {
             code = "dish-code-9",
             name = "Рибай",
             status = "ok",
-            mainParentIdent = "category-id-2",
+            mainParentIdent = "rk-category-id-2",
             kurs = "",
             qntDecDigits = 0,
             modiScheme = "rk-modifier-scheme-id-1",
@@ -222,8 +222,9 @@ object MenuDataSupplier {
             name = "В ОДНУ ТАРЕЛКУ",
             status = "ok",
             mainParentIdent = "rk-modifiers-group-id-1",
-            maxOneDish = 1,
+            maxOneDish = 2,
             useLimitedQnt = true,
+            inputName = false,
             price = 0
         ),
         StationModifierInfo(
@@ -235,7 +236,8 @@ object MenuDataSupplier {
             status = "ok",
             mainParentIdent = "rk-modifiers-group-id-1",
             maxOneDish = 1,
-            useLimitedQnt = true,
+            useLimitedQnt = false,
+            inputName = false,
             price = 0
         ),
         StationModifierInfo(
@@ -248,6 +250,20 @@ object MenuDataSupplier {
             mainParentIdent = "rk-modifiers-group-id-2",
             maxOneDish = 1,
             useLimitedQnt = true,
+            inputName = false,
+            price = 0
+        ),
+        StationModifierInfo(
+            id = "modifier-id-4",
+            rkId = "rk-modifier-id-4",
+            guid = "modifier-guid-4",
+            code = "modifier-code-4",
+            name = "КОММЕНТ",
+            status = "ok",
+            mainParentIdent = "rk-modifiers-group-id-2",
+            maxOneDish = 1,
+            useLimitedQnt = true,
+            inputName = true,
             price = 0
         ),
         StationModifierInfo(
@@ -260,6 +276,7 @@ object MenuDataSupplier {
             mainParentIdent = "rk-modifiers-group-id-3",
             maxOneDish = 1,
             useLimitedQnt = true,
+            inputName = false,
             price = 0
         ),
         StationModifierInfo(
@@ -272,6 +289,7 @@ object MenuDataSupplier {
             mainParentIdent = "rk-modifiers-group-id-3",
             maxOneDish = 1,
             useLimitedQnt = true,
+            inputName = false,
             price = 0
         ),
         StationModifierInfo(
@@ -284,6 +302,7 @@ object MenuDataSupplier {
             mainParentIdent = "rk-modifiers-group-id-3",
             maxOneDish = 1,
             useLimitedQnt = true,
+            inputName = false,
             price = 0
         )
     )
@@ -299,6 +318,7 @@ object MenuDataSupplier {
                 name = "Пивная кружка ROOT",
                 status = "ok",
                 mainParentIdent = "modifiers-group-id-x",
+                commonModifier = true,
                 childIds = listOf("rk-modifiers-group-id-1", "rk-modifiers-group-id-2"),
                 modifierIds = listOf()
             ),
@@ -310,6 +330,7 @@ object MenuDataSupplier {
                 name = "Зал",
                 status = "ok",
                 mainParentIdent = "rk-modifiers-group-id-0",
+                commonModifier = true,
                 childIds = listOf(),
                 modifierIds = listOf("rk-modifier-id-1", "rk-modifier-id-2")
             ),
@@ -321,6 +342,7 @@ object MenuDataSupplier {
                 name = "ОБЩЕЕ",
                 status = "ok",
                 mainParentIdent = "rk-modifiers-group-id-0",
+                commonModifier = true,
                 childIds = listOf(),
                 modifierIds = listOf("rk-modifier-id-3", "rk-modifier-id-4", "rk-modifier-id-5")
             ),
@@ -332,6 +354,7 @@ object MenuDataSupplier {
                 name = "Для стейков",
                 status = "ok",
                 mainParentIdent = "rk-modifiers-group-id-x",
+                commonModifier = false,
                 childIds = listOf(),
                 modifierIds = listOf(
                     "rk-modifier-id-rare",
@@ -357,15 +380,14 @@ object MenuDataSupplier {
                     id = "modifier-scheme-detail-id-1",
                     rkId = "rk-modifier-scheme-detail-id-1",
                     guid = "modifier-scheme-detail-guid-1",
-                    code = "modifier-scheme-detail-code-1",
                     name = "Деталь схемы для стейков",
-                    status = "ok",
-                    mainParentIdent = "rk-modifier-scheme-id-1",
                     modifiersGroupRkId = "rk-modifiers-group-id-3",
                     defaultModifier = "rk-modifier-id-medium",
                     upLimit = 1,
                     downLimit = 1,
-                    freeCount = true
+                    freeCount = true,
+                    useDownLimit = true,
+                    useUpLimit = true,
                 )
             )
         )

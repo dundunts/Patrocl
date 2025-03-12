@@ -1,212 +1,250 @@
 package org.turter.patrocl.presentation.orders.create.components
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material3.BottomSheetScaffold
+import androidx.compose.material.icons.filled.Create
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.SheetValue
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.rememberBottomSheetScaffoldState
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import cafe.adriel.voyager.navigator.LocalNavigator
-import cafe.adriel.voyager.navigator.currentOrThrow
-import kotlinx.coroutines.launch
 import org.turter.patrocl.presentation.components.FullscreenLoader
-import org.turter.patrocl.presentation.components.SwipeToDismissComponent
-import org.turter.patrocl.presentation.components.btn.ExpandableFAB
-import org.turter.patrocl.presentation.components.btn.FABItem
-import org.turter.patrocl.presentation.orders.common.InterceptedAddingDialog
-import org.turter.patrocl.presentation.orders.common.MenuSelectorComponent
-import org.turter.patrocl.presentation.orders.common.NewOrderItemCard
-import org.turter.patrocl.presentation.orders.common.TablePickerDialog
+import org.turter.patrocl.presentation.orders.common.components.BottomSheetMenu
+import org.turter.patrocl.presentation.orders.common.components.CreateCommentDialog
+import org.turter.patrocl.presentation.orders.common.interceptor.InterceptedAddingDialog
+import org.turter.patrocl.presentation.orders.common.components.MenuOption
+import org.turter.patrocl.presentation.orders.common.components.RkQuantityInputDialog
+import org.turter.patrocl.presentation.orders.common.components.RestaurantMenuSelector
 import org.turter.patrocl.presentation.orders.create.CreateOrderScreenState
-import org.turter.patrocl.presentation.orders.create.CreateOrderUiEvent
-import org.turter.patrocl.presentation.orders.create.CreateOrderUiEvent.CreateOrUpdateNewOrderItem
-import org.turter.patrocl.presentation.orders.create.CreateOrderUiEvent.IncreaseNewOrderItemQuantity
-import org.turter.patrocl.presentation.orders.create.CreateOrderUiEvent.RemoveNewOrderItem
-import org.turter.patrocl.presentation.orders.create.CreateOrderUiEvent.SelectNewOrderItem
-import org.turter.patrocl.presentation.orders.create.CreateOrderUiEvent.SelectTable
+import org.turter.patrocl.presentation.orders.common.CommonOrderUiEvent
+import org.turter.patrocl.presentation.orders.common.CommonOrderUiEvent.IncreaseNewOrderItemQuantity
+import org.turter.patrocl.presentation.orders.common.CommonOrderUiEvent.OpenCommentInput
+import org.turter.patrocl.presentation.orders.common.CommonOrderUiEvent.OpenDishCategory
+import org.turter.patrocl.presentation.orders.common.CommonOrderUiEvent.OpenModifiersSelector
+import org.turter.patrocl.presentation.orders.common.CommonOrderUiEvent.OpenQuantityInput
+import org.turter.patrocl.presentation.orders.common.CommonOrderUiEvent.RemoveNewOrderItem
+import org.turter.patrocl.presentation.orders.common.CommonOrderUiEvent.SelectNewOrderItem
 import org.turter.patrocl.presentation.orders.create.CreateOrderViewModel
-import org.turter.patrocl.presentation.orders.edit.EditOrderScreen
-import org.turter.patrocl.presentation.orders.item.new.edit.EditNewOrderItemScreen
-import org.turter.patrocl.ui.icons.Table_restaurant
+import org.turter.patrocl.presentation.orders.common.CustomCommentInputState
+import org.turter.patrocl.presentation.orders.common.MenuStatus
+import org.turter.patrocl.presentation.orders.common.QuantityInputState
+import org.turter.patrocl.presentation.orders.common.components.newItems
+import org.turter.patrocl.presentation.orders.common.getSelectedNewItem
+import org.turter.patrocl.presentation.orders.create.CreateOrderUiEvent
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateOrderComponent(
     vm: CreateOrderViewModel,
-    state: CreateOrderScreenState.Main,
-    paddingValues: PaddingValues = PaddingValues()
+    state: CreateOrderScreenState.Main
 ) {
     val newOrderItems = state.newOrderItems
-    val selectedItemUuid = state.selectedNewItemUuid
-    val isItemSelect = selectedItemUuid != null
-    val selectedItem = state.getSelectedItem()
-    val category = state.menuData.rootCategory
-    val dishes = state.menuData.dishes
-    val tables = state.tables
-    val selectedTable = state.selectedTable
-    val isTablePickerOpened = state.isTablePickerOpen
+    val orderInfo = state.orderInfo
+    val selectedItem = state.getSelectedNewItem()
     val isSaving = state.isSaving
+    val menuCurrentStatus = state.menuState.currentStatus
+    val menuOpened = state.menuState.targetStatus is MenuStatus.Opened
 
-    val navigator = LocalNavigator.currentOrThrow
-    val coroutineScope = rememberCoroutineScope()
-    val scaffoldState = rememberBottomSheetScaffoldState()
+    val focusManager = LocalFocusManager.current
 
-    val fabItems = listOf(
-        FABItem(
-            icon = Table_restaurant,
-            text = "Стол",
-            action = { vm.sendEvent(CreateOrderUiEvent.OpenTablePicker) }
-        ),
-        FABItem(
-            icon = Icons.Default.Check,
-            text = "Применить",
-            action = {
-                vm.sendEvent(CreateOrderUiEvent.CreateOrderAndGoTo {
-                    navigator.replace(
-                        EditOrderScreen(orderGuid = it.guid)
-                    )
-                })
-            }
-        ),
-        FABItem(
-            icon = Icons.AutoMirrored.Filled.ArrowForward,
-            text = "Создать",
-            action = { vm.sendEvent(CreateOrderUiEvent.CreateOrderAndGoTo { navigator.pop() }) }
-        )
+    val itemListState = rememberLazyListState(
+        initialFirstVisibleItemIndex = newOrderItems.size
     )
 
-    BottomSheetScaffold(
-        modifier = Modifier.padding(paddingValues),
-        scaffoldState = scaffoldState,
-        sheetPeekHeight = 40.dp,
-        sheetShape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-        sheetContent = {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                MenuSelectorComponent(
-                    rootCategory = category,
-                    allDishes = dishes,
-                    onDishClick = { dish ->
-                        vm.sendEvent(
-                            CreateOrderUiEvent.AddNewOrderItem(
-                                dishId = dish.id,
-                                dishName = dish.name
-                            )
-                        )
-                    }
-                )
-            }
-        },
-        topBar = {
-            CreateOrderTopAppBar(
-                showSelectedItemBar = isItemSelect,
-                selectedItem = selectedItem,
-                selectedTable = selectedTable,
-                onBack = { navigator.pop() },
-                onTableOpen = { vm.sendEvent(CreateOrderUiEvent.OpenTablePicker) },
-                onMenuOpen = { coroutineScope.launch { scaffoldState.bottomSheetState.expand() } },
-                onClose = { vm.sendEvent(CreateOrderUiEvent.UnselectNewOrderItem) },
-                onMoveUp = { vm.sendEvent(CreateOrderUiEvent.MoveSelectedItemUp) },
-                onMoveDown = { vm.sendEvent(CreateOrderUiEvent.MoveSelectedItemDown) },
-                onInfo = {
-                    selectedItem?.let { item ->
-                        navigator.push(EditNewOrderItemScreen(
-                            item = selectedItem,
-                            menuData = state.menuData,
-                            onSave = { vm.sendEvent(CreateOrUpdateNewOrderItem(it)) },
-                            onDelete = { vm.sendEvent(RemoveNewOrderItem(item)) }
-                        ))
-                    }
-                }
-            )
-        },
-        snackbarHost = { SnackbarHost(it) }
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxHeight(
-                        if (scaffoldState.bottomSheetState.targetValue == SheetValue.Expanded
-                            && scaffoldState.bottomSheetState.currentValue == SheetValue.PartiallyExpanded
-                        ) 1f
-                        else if (scaffoldState.bottomSheetState.targetValue == SheetValue.PartiallyExpanded
-                            && scaffoldState.bottomSheetState.currentValue == SheetValue.Expanded
-                        ) 1f
-                        else if (scaffoldState.bottomSheetState.currentValue == SheetValue.Expanded) 0.5f
-                        else 1f
-                    )
-                    .padding(horizontal = 16.dp)
-            ) {
-                items(items = newOrderItems, key = { it.uuid }) { orderItem ->
-                    SwipeToDismissComponent(
-                        modifier = Modifier.padding(top = 6.dp).animateItem(),
-                        onStartToEnd = { vm.sendEvent(RemoveNewOrderItem(orderItem)) },
-                        onEndToStart = { vm.sendEvent(RemoveNewOrderItem(orderItem)) }
-                    ) {
-                        NewOrderItemCard(
-                            item = orderItem,
-                            enabled = true,
-                            select = orderItem.uuid == selectedItem?.uuid,
-                            onLongClick = { vm.sendEvent(SelectNewOrderItem(orderItem.uuid)) },
-                            onClick = { vm.sendEvent(IncreaseNewOrderItemQuantity(orderItem)) }
-                        )
-                    }
-                }
-                item {
-                    Spacer(modifier = Modifier.height(88.dp))
-                }
-            }
+    var prevItemsSize by remember { mutableIntStateOf(state.newOrderItems.size) }
 
-            ExpandableFAB(
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(16.dp),
-                items = fabItems
-            )
-
+    LaunchedEffect(menuCurrentStatus) {
+        if (menuCurrentStatus is MenuStatus.Opened) {
+            itemListState.scrollToItem(itemListState.layoutInfo.totalItemsCount)
         }
     }
 
-    FullscreenLoader(isShown = isSaving)
+    LaunchedEffect(state.newOrderItems) {
+        val currentSize = state.newOrderItems.size
+        if (menuOpened && prevItemsSize < currentSize) {
+            itemListState.animateScrollToItem(itemListState.layoutInfo.totalItemsCount)
+        }
+        prevItemsSize = currentSize
+    }
 
-    TablePickerDialog(
-        isOpened = isTablePickerOpened,
-        tables = tables,
-        selectedTable = selectedTable,
-        onDismiss = { vm.sendEvent(CreateOrderUiEvent.CloseTablePicker) },
-        onSelectTable = { vm.sendEvent(SelectTable(it)) }
+    LaunchedEffect(menuOpened) {
+        if (!menuOpened) {
+            focusManager.clearFocus()
+        }
+    }
+
+    val searchFieldInteractionSource = remember { MutableInteractionSource() }
+
+    val searchIsPressed by searchFieldInteractionSource.collectIsPressedAsState()
+
+    LaunchedEffect(searchIsPressed) {
+        if (searchIsPressed && menuCurrentStatus is MenuStatus.Closed && !menuOpened) {
+            vm.sendEvent(CommonOrderUiEvent.OpenMenu)
+        }
+    }
+
+    val menuMaxHeight by animateFloatAsState(
+        targetValue = if (menuOpened) 0.8f else 0f,
+        animationSpec = tween(durationMillis = 500),
+        finishedListener = {
+            vm.sendEvent(
+                CommonOrderUiEvent.SetMenuCurrentStatus(
+                    if (it == 0f) MenuStatus.Closed
+                    else MenuStatus.Opened
+                )
+            )
+        }
     )
 
-    state.interceptedAdding?.let { intercepted ->
-        InterceptedAddingDialog(
-            warningType = intercepted.warningType,
-            onDismiss = { vm.sendEvent(CreateOrderUiEvent.RejectInterceptedAdding) },
-            onConfirm = { vm.sendEvent(CreateOrderUiEvent.ConfirmInterceptedAdding) }
+    val bottomSheetMenuOptions = listOf(
+        MenuOption(
+            label = "Свойства заказа",
+            icon = Icons.Default.Info,
+            onClick = { vm.sendEvent(CommonOrderUiEvent.OpenUpdateOrderInfo) }
+        ),
+        MenuOption(
+            label = "Сохранить и продолжить",
+            icon = Icons.Default.Create,
+            onClick = { vm.sendEvent(CreateOrderUiEvent.CreateOrderAndContinue) }
+        ),
+        MenuOption(
+            label = "Создать заказ",
+            icon = Icons.Default.Check,
+            onClick = { vm.sendEvent(CreateOrderUiEvent.CreateOrderAndFinish) }
+        ),
+        MenuOption(
+            label = "Вернуться к заказам",
+            icon = Icons.AutoMirrored.Default.ArrowBack,
+            onClick = { vm.sendEvent(CommonOrderUiEvent.NavigateBack) }
         )
+    )
+
+    Scaffold(
+        topBar = {
+            CreateOrderTopAppBar(
+                onBack = { vm.sendEvent(CommonOrderUiEvent.NavigateBack) },
+                tableName = orderInfo.table?.name?: "-",
+                waiterName = orderInfo.waiter.name
+            )
+        },
+        bottomBar = {
+            OrderBottomActionBar(
+                selectedState = state.selected,
+                onOrderInfo = { vm.sendEvent(CommonOrderUiEvent.OpenUpdateOrderInfo) },
+                onRestaurantMenu = { vm.sendEvent(CommonOrderUiEvent.SwitchMenu) },
+                onSave = { vm.sendEvent(CreateOrderUiEvent.CreateOrderAndContinue) },
+                onFinish = { vm.sendEvent(CreateOrderUiEvent.CreateOrderAndFinish) },
+                onDefaultMenu = { vm.sendEvent(CommonOrderUiEvent.OpenBottomSheetMenu) },
+                onUnselect = { vm.sendEvent(CommonOrderUiEvent.UnselectNewOrderItem) },
+                onMoveUp = { vm.sendEvent(CommonOrderUiEvent.MoveSelectedItemUp) },
+                onMoveDown = { vm.sendEvent(CommonOrderUiEvent.MoveSelectedItemDown) },
+                onSelectedItemMenu = { vm.sendEvent(CommonOrderUiEvent.OpenBottomSheetMenu) }
+            )
+        }
+    ) { innerPadding ->
+        Box(modifier = Modifier.padding(innerPadding)) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                //items
+                LazyColumn(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 2.dp, vertical = 4.dp),
+                    state = itemListState
+                ) {
+                    newItems(
+                        items = newOrderItems,
+                        selectedItem = selectedItem,
+                        commentInputOpen = { vm.sendEvent(OpenCommentInput(it)) },
+                        removeItem = { vm.sendEvent(RemoveNewOrderItem(it)) },
+                        incQnt = { vm.sendEvent(IncreaseNewOrderItemQuantity(it)) },
+                        openQntInput = { vm.sendEvent(OpenQuantityInput(it)) },
+                        openModSelector = { vm.sendEvent(OpenModifiersSelector(it)) },
+                        openDishCategory = { vm.sendEvent(OpenDishCategory(it)) },
+                        selectItem = { vm.sendEvent(SelectNewOrderItem(it)) },
+                    )
+                }
+                //Menu
+                RestaurantMenuSelector(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .defaultMinSize(minHeight = 70.dp)
+                        .fillMaxHeight(menuMaxHeight),
+                    categoriesMap = state.menu.categoryRkIdMap,
+                    dishesMap = state.menu.dishRkIdMap,
+                    stopListMap = state.menu.stopListDishRkIdMap,
+                    rootCategoryRkId = state.menu.rootCategoryRkId,
+                    searchFieldInteractionSource = searchFieldInteractionSource,
+                    menuState = state.menuState,
+                    setCurrentCategory = { vm.sendEvent(CommonOrderUiEvent.SetCurrentCategory(it)) },
+                    switchMenuOpened = { vm.sendEvent(CommonOrderUiEvent.SwitchMenu) },
+                    addNewItem = { vm.sendEvent(CommonOrderUiEvent.AddNewOrderItem(it)) }
+                )
+            }
+        }
+
+        if (state.customCommentInputState is CustomCommentInputState.Opened) {
+            newOrderItems.find { state.customCommentInputState.uuid == it.uuid }?.let { item ->
+                CreateCommentDialog(
+                    modifiers = item.modifiers,
+                    onConfirm = { vm.sendEvent(CommonOrderUiEvent.SaveComment(it)) },
+                    onDismiss = { vm.sendEvent(CommonOrderUiEvent.CloseCommentInput) }
+                )
+            }
+        }
+
+        if (state.quantityInputState is QuantityInputState.Opened) {
+            newOrderItems.find { state.quantityInputState.uuid == it.uuid }?.let { item ->
+                RkQuantityInputDialog(
+                    item = item,
+                    onConfirm = { vm.sendEvent(CommonOrderUiEvent.SetQuantity(it)) },
+                    onDismiss = { vm.sendEvent(CommonOrderUiEvent.CloseQuantityInput) }
+                )
+            }
+        }
+
+        state.interceptedAdding?.let { intercepted ->
+            InterceptedAddingDialog(
+                warningType = intercepted.warningType,
+                onDismiss = { vm.sendEvent(CommonOrderUiEvent.RejectInterceptedAdding) },
+                onConfirm = { vm.sendEvent(CommonOrderUiEvent.ConfirmInterceptedAdding) }
+            )
+        }
     }
+
+    BottomSheetMenu(
+        modifier = Modifier.fillMaxSize(),
+        showBottomSheet = state.isBottomSheetOpened,
+        onDismiss = { vm.sendEvent(CommonOrderUiEvent.HideBottomSheetMenu) },
+        menuOptions = bottomSheetMenuOptions
+    )
+
+    FullscreenLoader(isShown = isSaving)
 }
