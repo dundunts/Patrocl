@@ -18,11 +18,10 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import org.turter.patrocl.data.dto.enums.SourceDataType
 import org.turter.patrocl.data.dto.source.dataversion.CompanySourceDataVersion
 import org.turter.patrocl.data.local.repository.CompanySourceDataVersionLocalRepository
-import org.turter.patrocl.data.local.repository.CompanySourcesInfoLocalRepository
 import org.turter.patrocl.data.local.repository.ModifiersGroupLocalRepository
+import org.turter.patrocl.data.local.repository.impl.prefs.SourceDataPrefsImpl
 import org.turter.patrocl.data.mapper.menu.toModifiersGroupInfoListFromLocal
 import org.turter.patrocl.data.mapper.menu.toModifiersGroupLocalList
 import org.turter.patrocl.data.mapper.version.toCompanySourceDataVersionLocal
@@ -35,6 +34,7 @@ import org.turter.patrocl.domain.model.DataStatus.Initial
 import org.turter.patrocl.domain.model.DataStatus.Loading
 import org.turter.patrocl.domain.model.DataStatus.Ready
 import org.turter.patrocl.domain.model.FetchState
+import org.turter.patrocl.domain.model.enums.SourceDataType
 import org.turter.patrocl.domain.model.menu.ModifierGroupInfo
 import org.turter.patrocl.domain.model.menu.ModifiersGroupsTreeData
 
@@ -42,7 +42,8 @@ class ModifiersGroupFetcherImpl(
     private val menuApiClient: MenuApiClient,
     private val modifiersGroupRepository: ModifiersGroupLocalRepository,
     private val dataVersionRepository: CompanySourceDataVersionLocalRepository,
-    private val companyRepository: CompanySourcesInfoLocalRepository
+    private val sourceDataPrefs: SourceDataPrefsImpl
+//    private val companyRepository: CompanySourcesInfoLocalRepository
 ) : ModifiersGroupFetcher {
     private val log = Logger.withTag("ModifiersGroupFetcherImpl")
 
@@ -55,9 +56,8 @@ class ModifiersGroupFetcherImpl(
         }
         .distinctUntilChanged()
 
-    private val rootModifiersGroupRkIdFlow = companyRepository
-        .get()
-        .map { res -> res.map { it.rootModifierGroupRkId } }
+    private val rootModifiersGroupRkIdFlow = sourceDataPrefs
+        .getRootModifierGroupRkId()
         .distinctUntilChanged()
 
     private val refreshModifiersGroupFlow = MutableSharedFlow<Unit>(replay = 1)
@@ -87,9 +87,10 @@ class ModifiersGroupFetcherImpl(
                 }
             }.combine(rootModifiersGroupRkIdFlow) { groupsRes, rootRkIdRes ->
                 try {
+                    if (rootRkIdRes.isBlank()) throw RuntimeException("Root modifiers group rk id is blank")
                     Result.success(
                         ModifiersGroupsTreeData(
-                            rootGroupRkId = rootRkIdRes.getOrThrow(),
+                            rootGroupRkId = rootRkIdRes,
                             groups = groupsRes.getOrThrow()
                         )
                     )
@@ -122,6 +123,10 @@ class ModifiersGroupFetcherImpl(
 
     override fun getDataStatus(): StateFlow<DataStatus> = modifiersGroupDataStatus.asStateFlow()
 
+    override fun getActualCount(): Long {
+        return modifiersGroupRepository.count()
+    }
+
     override suspend fun refresh() {
         refreshModifiersGroupFlow.emit(Unit)
     }
@@ -145,12 +150,14 @@ class ModifiersGroupFetcherImpl(
                         res.version
                     ).toCompanySourceDataVersionLocal()
                 )
-                companyRepository.setRootModifiersGroupRkId(companyId, res.rootModifiersGroupId)
+                sourceDataPrefs.setRootModifierGroupRkId(res.rootModifiersGroupId)
                 modifiersGroupDataStatus.emit(Ready)
             },
             onFailure = { cause ->
-                log.e { "Fail fetching modifiers group from remote - start cleanup local data. " +
-                        "Cause: $cause" }
+                log.e {
+                    "Fail fetching modifiers group from remote - start cleanup local data. " +
+                            "Cause: $cause"
+                }
                 modifiersGroupRepository.cleanUp()
                 dataVersionRepository.deleteVersionFor(SourceDataType.COMPANY_MODIFIERS_GROUPS)
                 modifiersGroupDataStatus.emit(Empty)

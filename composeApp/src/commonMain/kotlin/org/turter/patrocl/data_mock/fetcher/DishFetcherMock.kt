@@ -31,6 +31,10 @@ class DishFetcherMock: DishFetcher {
         return MutableStateFlow<DataStatus>(DataStatus.Ready).asStateFlow()
     }
 
+    override fun getActualCount(): Long {
+        TODO("Not yet implemented")
+    }
+
     override suspend fun refresh() {
 
     }

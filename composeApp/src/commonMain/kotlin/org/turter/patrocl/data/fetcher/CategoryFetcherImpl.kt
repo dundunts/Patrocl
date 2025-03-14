@@ -18,11 +18,10 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import org.turter.patrocl.data.dto.enums.SourceDataType
 import org.turter.patrocl.data.dto.source.dataversion.CompanySourceDataVersion
 import org.turter.patrocl.data.local.repository.CategoryLocalRepository
 import org.turter.patrocl.data.local.repository.CompanySourceDataVersionLocalRepository
-import org.turter.patrocl.data.local.repository.CompanySourcesInfoLocalRepository
+import org.turter.patrocl.data.local.repository.impl.prefs.SourceDataPrefsImpl
 import org.turter.patrocl.data.mapper.menu.toCategoryInfoList
 import org.turter.patrocl.data.mapper.menu.toCategoryLocalList
 import org.turter.patrocl.data.mapper.version.toCompanySourceDataVersionLocal
@@ -35,6 +34,7 @@ import org.turter.patrocl.domain.model.DataStatus.Initial
 import org.turter.patrocl.domain.model.DataStatus.Loading
 import org.turter.patrocl.domain.model.DataStatus.Ready
 import org.turter.patrocl.domain.model.FetchState
+import org.turter.patrocl.domain.model.enums.SourceDataType
 import org.turter.patrocl.domain.model.menu.CategoriesTreeData
 import org.turter.patrocl.domain.model.menu.CategoryInfo
 
@@ -42,7 +42,8 @@ class CategoryFetcherImpl(
     private val menuApiClient: MenuApiClient,
     private val categoryRepository: CategoryLocalRepository,
     private val versionRepository: CompanySourceDataVersionLocalRepository,
-    private val companyInfoRepository: CompanySourcesInfoLocalRepository
+    private val sourceDataPrefs: SourceDataPrefsImpl
+//    private val companyInfoRepository: CompanySourcesInfoLocalRepository
 ) : CategoryFetcher {
     private val log = Logger.withTag("CategoryFetcherImpl")
 
@@ -55,12 +56,8 @@ class CategoryFetcherImpl(
         }
         .distinctUntilChanged()
 
-    private val rootCategoryRkIdFlow = companyInfoRepository
-        .get()
-        .map { res ->
-            log.d { "Get company info: ${res.getOrNull()}" }
-            res.map { it.rootCategoryRkId }
-        }
+    private val rootCategoryRkIdFlow = sourceDataPrefs
+        .getRootCategoryRkId()
         .distinctUntilChanged()
 
     private val refreshCategoryFlow = MutableSharedFlow<Unit>(replay = 1)
@@ -90,9 +87,10 @@ class CategoryFetcherImpl(
                 }
             }.combine(rootCategoryRkIdFlow) { categoriesRes, rootRkIdRes ->
                 try {
+                    if (rootRkIdRes.isBlank()) throw RuntimeException("Root category rk id is blank")
                     Result.success(
                         CategoriesTreeData(
-                            rootCategoryRkId = rootRkIdRes.getOrThrow(),
+                            rootCategoryRkId = rootRkIdRes,
                             categories = categoriesRes.getOrThrow()
                         )
                     )
@@ -124,6 +122,10 @@ class CategoryFetcherImpl(
 
     override fun getDataStatus(): StateFlow<DataStatus> = categoryDataStatus.asStateFlow()
 
+    override fun getActualCount(): Long {
+        return categoryRepository.count()
+    }
+
     override suspend fun refresh() {
         refreshCategoryFlow.emit(Unit)
     }
@@ -138,8 +140,10 @@ class CategoryFetcherImpl(
                             "CategoryDto: $categoryData"
                 }
                 categoryRepository.replace(categoryData.categories.toCategoryLocalList())
-                log.d { "Complete replacing categories in local storage - " +
-                        "start updating versions repository" }
+                log.d {
+                    "Complete replacing categories in local storage - " +
+                            "start updating versions repository"
+                }
                 versionRepository.updateVersion(
                     CompanySourceDataVersion.forCategories(
                         categoryData.companyId,
@@ -147,12 +151,11 @@ class CategoryFetcherImpl(
                         categoryData.version
                     ).toCompanySourceDataVersionLocal()
                 )
-                log.d { "Complete updating versions repository - start updating company info " +
-                        "repository: set root category rk id: ${categoryData.rootCategoryRkId}" }
-                companyInfoRepository.setRootCategoryRkId(
-                    categoryData.companyId,
-                    categoryData.rootCategoryRkId
-                )
+                log.d {
+                    "Complete updating versions repository - start updating company info " +
+                            "repository: set root category rk id: ${categoryData.rootCategoryRkId}"
+                }
+                sourceDataPrefs.setRootCategoryRkId(categoryData.rootCategoryRkId)
                 log.d { "Complete updating company info - emit data status Ready" }
                 categoryDataStatus.emit(Ready)
             },

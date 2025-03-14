@@ -1,7 +1,7 @@
 package org.turter.patrocl.data.mapper.version
 
 import org.turter.patrocl.data.dto.source.dataversion.CompanySourceDataVersion
-import org.turter.patrocl.data.dto.enums.SourceDataType
+import org.turter.patrocl.domain.model.enums.SourceDataType
 import org.turter.patrocl.data.local.entity.version.CompanySourceDataVersionLocal
 
 fun CompanySourceDataVersionLocal.toCompanySourceDataVersion(): CompanySourceDataVersion =

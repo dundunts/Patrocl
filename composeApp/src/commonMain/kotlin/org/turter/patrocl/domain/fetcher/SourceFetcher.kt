@@ -7,6 +7,7 @@ import org.turter.patrocl.domain.model.FetchState
 interface SourceFetcher<T> {
     fun getStateFlow(): StateFlow<FetchState<T>>
     fun getDataStatus(): StateFlow<DataStatus>
+    fun getActualCount(): Long
     suspend fun refresh()
     suspend fun refreshFromRemote()
 }

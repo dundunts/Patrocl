@@ -17,7 +17,6 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import org.turter.patrocl.data.dto.enums.SourceDataType
 import org.turter.patrocl.data.dto.source.dataversion.CompanySourceDataVersion
 import org.turter.patrocl.data.local.repository.CompanySourceDataVersionLocalRepository
 import org.turter.patrocl.data.local.repository.OrderItemVoidLocalRepository
@@ -33,6 +32,7 @@ import org.turter.patrocl.domain.model.DataStatus.Initial
 import org.turter.patrocl.domain.model.DataStatus.Loading
 import org.turter.patrocl.domain.model.DataStatus.Ready
 import org.turter.patrocl.domain.model.FetchState
+import org.turter.patrocl.domain.model.enums.SourceDataType
 import org.turter.patrocl.domain.model.voids.OrderItemVoidInfo
 
 class OrderItemVoidFetcherImpl(
@@ -101,6 +101,10 @@ class OrderItemVoidFetcherImpl(
         voidsStateFlow
 
     override fun getDataStatus(): StateFlow<DataStatus> = voidsDataStatus.asStateFlow()
+
+    override fun getActualCount(): Long {
+        return voidsRepository.count()
+    }
 
     override suspend fun refresh() {
         refreshVoidsFlow.emit(Unit)

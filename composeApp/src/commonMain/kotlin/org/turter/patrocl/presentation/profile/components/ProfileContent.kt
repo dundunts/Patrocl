@@ -29,13 +29,13 @@ fun ProfileContent(
     vm: ProfileViewModel,
     state: ProfileScreenState.Content
 ) {
-    val employee = state.employee
+//    val employee = state.employee
     val waiter = state.waiter
     val navigator = LocalNavigator.currentOrThrow
 
     val props = ProfileProps.from(
         waiter = waiter,
-        employee = employee
+//        employee = employee
     )
 
     val options = listOf(
@@ -66,8 +66,8 @@ fun ProfileContent(
         modifier = Modifier.fillMaxSize(),
         topBar = {
             ProfileTopAppBar(
-                name = employee.name,
-                positionTitle = employee.position.title,
+                name = waiter.name,
+//                positionTitle = employee.position.title,
 //                onLogout = { vm.sendEvent(ProfileUiEvent.Logout { navigator.replaceAll(WelcomeScreen()) }) }
                 onLogout = { navigator.logout() }
             )
@@ -104,14 +104,14 @@ fun ProfileContent(
         }
     }
 
-    ChangePreferCompanyDialog(
-        currentCompany = employee.companyList.find { it.id == employee.preferredCompanyId },
-        companies = employee.companyList,
-        isExpanded = state.isChangePreferCompanyDialogOpen,
-        isProcess = state.isChangingCompany,
-        onDismiss = { vm.sendEvent(CloseChangePreferCompanyDialog) },
-        onSelect = { vm.sendEvent(SelectNewPreferCompany(it)) },
-        onConfirmChanging = { vm.sendEvent(ConfirmChangingPreferCompany) }
-    )
+//    ChangePreferCompanyDialog(
+//        currentCompany = employee.companyList.find { it.id == employee.preferredCompanyId },
+//        companies = emptyList(),
+//        isExpanded = state.isChangePreferCompanyDialogOpen,
+//        isProcess = state.isChangingCompany,
+//        onDismiss = { vm.sendEvent(CloseChangePreferCompanyDialog) },
+//        onSelect = { vm.sendEvent(SelectNewPreferCompany(it)) },
+//        onConfirmChanging = { vm.sendEvent(ConfirmChangingPreferCompany) }
+//    )
 
 }

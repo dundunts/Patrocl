@@ -2,7 +2,7 @@ package org.turter.patrocl.data.dto.source.dataversion
 
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
-import org.turter.patrocl.data.dto.enums.SourceDataType
+import org.turter.patrocl.domain.model.enums.SourceDataType
 
 @Serializable
 data class DataVersionDto(

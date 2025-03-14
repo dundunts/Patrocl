@@ -12,15 +12,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import org.turter.patrocl.data.local.repository.OwnWaiterLocalRepository
+import org.turter.patrocl.data.local.repository.impl.prefs.WaiterRepositoryImpl
 import org.turter.patrocl.data.mapper.person.toWaiter
 import org.turter.patrocl.data.mapper.person.toWaiterList
-import org.turter.patrocl.data.mapper.person.toWaiterLocal
 import org.turter.patrocl.data.remote.client.WaiterApiClient
 import org.turter.patrocl.domain.model.BindStatus
 import org.turter.patrocl.domain.model.FetchState
@@ -30,15 +29,15 @@ import org.turter.patrocl.domain.service.WaiterService
 
 class WaiterServiceImpl(
     private val waiterApiClient: WaiterApiClient,
-    private val ownWaiterLocalRepository: OwnWaiterLocalRepository
+    private val waiterRepository: WaiterRepositoryImpl
+//    private val ownWaiterLocalRepository: OwnWaiterLocalRepository
 ) : WaiterService {
     private val log = Logger.withTag("WaiterServiceImpl")
 
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
-    private val waiterFlow = ownWaiterLocalRepository
-        .get()
-        .map { res -> res.map { it.toWaiter() } }
+    private val waiterFlow = waiterRepository
+        .getWaiter()
         .distinctUntilChanged()
 
     private val refreshWaiterFlow = MutableSharedFlow<Unit>(replay = 1)
@@ -54,32 +53,69 @@ class WaiterServiceImpl(
             emit(FetchState.loading())
             waiterDataStatusFlow.emit(BindStatus.Loading)
 
-            waiterFlow.flatMapLatest { current ->
-                log.d { "Current waiter result: $current" }
-                if (current.isSuccess) {
-                    log.d { "Current waiter result is success - emit current value" }
-                    flowOf(current)
-                } else {
-                    flow<Result<Waiter>> {
-                        log.d { "Current waiter result is failure - start updating from remote " }
-                        updateWaiterFromRemote()
-                        emitAll(waiterFlow)
+            waiterFlow.first()
+                .onSuccess { waiter ->
+                    log.d {
+                        "Current waiter result is success\n" +
+                                " - emit current value: $waiter\n" +
+                                " - emit bind status BIND"
                     }
+                    emit(FetchState.success(waiter))
+                    waiterDataStatusFlow.emit(BindStatus.Bind)
                 }
-            }.collect { result ->
-                result.fold(
-                    onSuccess = { value ->
-                        emit(FetchState.success(value))
-                        log.d { "Waiter result is success - emit bind status BIND" }
-                        waiterDataStatusFlow.emit(BindStatus.Bind)
-                    },
-                    onFailure = { cause ->
-                        emit(FetchState.fail(cause))
-                        log.d { "Current waiter not present - emit bind status NOT_BIND" }
-                        waiterDataStatusFlow.emit(BindStatus.NotBind)
+                .onFailure { localCause ->
+                    log.d {
+                        "Current waiter result is failure\n" +
+                                " - local cause: ${localCause.message}" +
+                                " - start updating from remote "
                     }
-                )
-            }
+                    updateWaiterFromRemote()
+                        .onSuccess { waiter ->
+                            log.d {
+                                "Waiter result from remote is success\n" +
+                                        " - emit current value: $waiter\n" +
+                                        " - emit bind status BIND"
+                            }
+                            emit(FetchState.success(waiter))
+                            waiterDataStatusFlow.emit(BindStatus.Bind)
+                        }
+                        .onFailure { remoteCause ->
+                            log.e(
+                                messageString = "Fail waiter result from remote\n" +
+                                        " - emit fail fetch state\n" +
+                                        " - emit bind status NOT_BIND\n" +
+                                        " - cause: ${remoteCause.message}",
+                                throwable = remoteCause
+                            )
+                        }
+                }
+
+//            waiterFlow.flatMapLatest { current ->
+//                log.d { "Current waiter result: $current" }
+//                if (current.isSuccess) {
+//                    log.d { "Current waiter result is success - emit current value" }
+//                    flowOf(current)
+//                } else {
+//                    flow<Result<Waiter>> {
+//                        log.d { "Current waiter result is failure - start updating from remote " }
+//                        updateWaiterFromRemote()
+//                        emitAll(waiterFlow)
+//                    }
+//                }
+//            }.collect { result ->
+//                result.fold(
+//                    onSuccess = { value ->
+//                        emit(FetchState.success(value))
+//                        log.d { "Waiter result is success - emit bind status BIND" }
+//                        waiterDataStatusFlow.emit(BindStatus.Bind)
+//                    },
+//                    onFailure = { cause ->
+//                        emit(FetchState.fail(cause))
+//                        log.d { "Current waiter not present - emit bind status NOT_BIND" }
+//                        waiterDataStatusFlow.emit(BindStatus.NotBind)
+//                    }
+//                )
+//            }
         }
     }.stateIn(
         scope = coroutineScope,
@@ -154,12 +190,13 @@ class WaiterServiceImpl(
                     "Success fetching waiter from remote - start replace to local data. " +
                             "WaiterDto: $waiterDto"
                 }
-                ownWaiterLocalRepository.replace(waiterDto.toWaiterLocal())
-                return Result.success(waiterDto.toWaiter())
+                val waiter = waiterDto.toWaiter()
+                waiterRepository.setWaiter(waiter)
+                return Result.success(waiter)
             },
             onFailure = { cause ->
                 log.e { "Fail fetching waiter from remote - start cleanup local data" }
-                ownWaiterLocalRepository.cleanUp()
+                waiterRepository.clear()
                 return Result.failure(cause)
             }
         )

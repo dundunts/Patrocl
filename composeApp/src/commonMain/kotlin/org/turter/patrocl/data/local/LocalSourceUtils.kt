@@ -37,3 +37,7 @@ fun <T> Result<List<T>>.logFetchingEntityListWith(logger: Logger): Result<List<T
     return this.onSuccess { logger.d { "Fetched entities from realm, count: ${it.count()}" } }
         .onFailure { logger.e { "Catch exception while fetching entities from realm. Exception: $it" } }
 }
+
+fun <T> T?.handleNullableResult(): Result<T> {
+    return if (this != null) Result.success(this) else Result.failure(EmptyLocalDataException())
+}

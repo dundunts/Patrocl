@@ -11,7 +11,7 @@ sealed class ProfileScreenState {
 
     data class Content(
         val waiter: Waiter,
-        val employee: Employee,
+//        val employee: Employee,
         var isChangePreferCompanyDialogOpen: Boolean = false,
         var newPreferCompany: CompanyEmbedded? = null,
         var isChangingCompany: Boolean,

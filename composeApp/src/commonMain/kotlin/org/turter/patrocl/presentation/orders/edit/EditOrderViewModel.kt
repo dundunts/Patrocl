@@ -113,7 +113,7 @@ class EditOrderViewModel(
     private fun observeData() {
         coroutineScope.launch {
             combine(
-                orderService.getOrderFlow(orderGuid),
+                orderService.openAndGetCurrentOrderFlow(orderGuid),
                 menuService.getMenuTreeDataStateFlow(),
                 hallFetcher.getStateFlow(),
                 waiterService.getOwnWaiterStateFlow(),
@@ -220,6 +220,11 @@ class EditOrderViewModel(
             is SaveOrderAndContinue -> addNewItemsToOrder()
             is SaveOrderAndFinish -> addNewItemsToOrder(navigateBack)
         }
+    }
+
+    override fun onDispose() {
+        log.d { "VM for order guid: $orderGuid - on dispose" }
+        super.onDispose()
     }
 
     private fun updateOrderInfo(newOrderInfo: OrderInfo): Result<Unit> {
@@ -451,6 +456,18 @@ class EditOrderViewModel(
             is Selected.SavedItems -> selected.items
             else -> emptySet()
         }
+    }
+
+    private fun EditOrderScreenState.Main.extractOrderInfo(order: Order): OrderInfo {
+        val orderWaiter = order.waiter
+        val orderTable = order.table
+        return OrderInfo(
+            waiter = waiters.find { it.rkId == orderWaiter.rkId }
+                ?: orderWaiter.toWaiter(),
+            table = halls.halls.flatMap { it.tables }.find {
+                it.rkId == orderTable.rkId
+            } ?: orderTable.toTable()
+        )
     }
 
     private fun Order.Waiter.toWaiter() = Waiter("", rkId, guid, code, name)

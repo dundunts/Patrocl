@@ -17,11 +17,10 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import org.turter.patrocl.data.dto.enums.SourceDataType
 import org.turter.patrocl.data.dto.source.dataversion.CompanySourceDataVersion
 import org.turter.patrocl.data.local.repository.CompanySourceDataVersionLocalRepository
-import org.turter.patrocl.data.local.repository.CompanySourcesInfoLocalRepository
 import org.turter.patrocl.data.local.repository.HallLocalRepository
+import org.turter.patrocl.data.local.repository.impl.prefs.SourceDataPrefsImpl
 import org.turter.patrocl.data.mapper.hall.toHallInfoListFromLocal
 import org.turter.patrocl.data.mapper.hall.toHallLocalList
 import org.turter.patrocl.data.mapper.version.toCompanySourceDataVersionLocal
@@ -32,14 +31,16 @@ import org.turter.patrocl.domain.model.DataStatus.Empty
 import org.turter.patrocl.domain.model.DataStatus.Loading
 import org.turter.patrocl.domain.model.DataStatus.Ready
 import org.turter.patrocl.domain.model.FetchState
-import org.turter.patrocl.domain.model.hall.HallsData
+import org.turter.patrocl.domain.model.enums.SourceDataType
 import org.turter.patrocl.domain.model.hall.HallInfo
+import org.turter.patrocl.domain.model.hall.HallsData
 
 class HallFetcherImpl(
     private val hallApiClient: HallApiClient,
     private val hallRepository: HallLocalRepository,
     private val dataVersionRepository: CompanySourceDataVersionLocalRepository,
-    private val companyInfoRepository: CompanySourcesInfoLocalRepository
+    private val sourceDataPrefs: SourceDataPrefsImpl
+//    private val companyInfoRepository: CompanySourcesInfoLocalRepository
 ) : HallFetcher {
     private val log = Logger.withTag("TableFetcherImpl")
 
@@ -50,9 +51,8 @@ class HallFetcherImpl(
         .map { res -> res.map { it.toHallInfoListFromLocal() } }
         .distinctUntilChanged()
 
-    private val defaultHallRkIdFlow = companyInfoRepository
-        .get()
-        .map { res -> res.map { it.defaultHallRkId } }
+    private val defaultHallRkIdFlow = sourceDataPrefs
+        .getDefaultHallRkId()
         .distinctUntilChanged()
 
     private val refreshTableFlow = MutableSharedFlow<Unit>(replay = 1)
@@ -82,9 +82,10 @@ class HallFetcherImpl(
                 }
             }.combine(defaultHallRkIdFlow) { hallsRes, defaultRkIdRes ->
                 try {
+                    if (defaultRkIdRes.isBlank()) throw RuntimeException("Default hall rk id is blank")
                     Result.success(
                         HallsData(
-                            defaultHallRkId = defaultRkIdRes.getOrThrow(),
+                            defaultHallRkId = defaultRkIdRes,
                             halls = hallsRes.getOrThrow()
                         )
                     )
@@ -116,6 +117,10 @@ class HallFetcherImpl(
 
     override fun getDataStatus(): StateFlow<DataStatus> = tableDataStatusFlow.asStateFlow()
 
+    override fun getActualCount(): Long {
+        return hallRepository.count()
+    }
+
     override suspend fun refresh() {
         refreshTableFlow.emit(Unit)
     }
@@ -133,7 +138,7 @@ class HallFetcherImpl(
                             "Halls list size: ${halls.size}"
                 }
                 hallRepository.replace(halls.toHallLocalList())
-                companyInfoRepository.setDefaultHallRkId(companyId, res.defaultHallRkId)
+                sourceDataPrefs.setDefaultHallRkId(res.defaultHallRkId)
                 dataVersionRepository.updateVersion(
                     CompanySourceDataVersion.forHalls(
                         companyId,

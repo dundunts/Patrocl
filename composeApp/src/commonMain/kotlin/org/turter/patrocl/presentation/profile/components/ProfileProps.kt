@@ -5,16 +5,19 @@ import org.turter.patrocl.domain.model.person.Waiter
 
 class ProfileProps {
     companion object {
-        fun from(waiter: Waiter, employee: Employee): List<ProfileProp> = listOf(
-            ProfileProp("Имя", employee.name),
-            ProfileProp("Фамилия", employee.lastName),
-            ProfileProp("Отчество", employee.patronymic),
-            ProfileProp(
-                "Текущая организация",
-                employee.companyList.find { it.id == employee.preferredCompanyId }?.title
-                    ?: "Нет"
-            ),
-            ProfileProp("Код официанта", waiter.code)
+        fun from(
+            waiter: Waiter,
+//                 employee: Employee
+        ): List<ProfileProp> = listOf(
+//            ProfileProp("Имя", employee.name),
+//            ProfileProp("Фамилия", employee.lastName),
+//            ProfileProp("Отчество", employee.patronymic),
+//            ProfileProp(
+//                "Текущая организация",
+//                employee.companyList.find { it.id == employee.preferredCompanyId }?.title
+//                    ?: "Нет"
+//            ),
+//            ProfileProp("Код официанта", waiter.code)
         )
     }
 

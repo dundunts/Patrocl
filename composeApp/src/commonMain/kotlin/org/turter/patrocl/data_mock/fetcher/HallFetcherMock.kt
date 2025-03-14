@@ -27,6 +27,10 @@ class HallFetcherMock : HallFetcher {
         return dataStatusFlow.asStateFlow()
     }
 
+    override fun getActualCount(): Long {
+        TODO("Not yet implemented")
+    }
+
     override suspend fun refresh() {
         hallsStateFlow.value = FetchState.loading()
         dataStatusFlow.value = DataStatus.Loading

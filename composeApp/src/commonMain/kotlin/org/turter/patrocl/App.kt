@@ -9,7 +9,7 @@ import org.turter.patrocl.ui.theme.lazur.AppTheme
 @Composable
 fun App() {
     KoinContext {
-        AppTheme {
+        AppTheme(darkTheme = true) {
             Navigator(WelcomeScreen())
         }
     }

@@ -17,7 +17,6 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import org.turter.patrocl.data.dto.enums.SourceDataType
 import org.turter.patrocl.data.dto.source.dataversion.CompanySourceDataVersion
 import org.turter.patrocl.data.local.repository.CompanySourceDataVersionLocalRepository
 import org.turter.patrocl.data.local.repository.ModifierLocalRepository
@@ -33,6 +32,7 @@ import org.turter.patrocl.domain.model.DataStatus.Initial
 import org.turter.patrocl.domain.model.DataStatus.Loading
 import org.turter.patrocl.domain.model.DataStatus.Ready
 import org.turter.patrocl.domain.model.FetchState
+import org.turter.patrocl.domain.model.enums.SourceDataType
 import org.turter.patrocl.domain.model.menu.StationModifierInfo
 
 class ModifiersFetcherImpl(
@@ -101,6 +101,10 @@ class ModifiersFetcherImpl(
         modifiersStateFlow
 
     override fun getDataStatus(): StateFlow<DataStatus> = modifiersDataStatus.asStateFlow()
+
+    override fun getActualCount(): Long {
+        return modifiersRepository.count()
+    }
 
     override suspend fun refresh() {
         refreshModifiersFlow.emit(Unit)

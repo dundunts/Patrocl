@@ -17,8 +17,8 @@ object ApiServiceName {
 
 //TODO актуализировать эндпоинты
 object ApiEndpoint {
-//    private val API_BASE_URL_HTTP = "http://92.255.107.65:8765"
-    private val API_BASE_URL_HTTP = "http://192.168.0.103:18765"
+    private val API_BASE_URL_HTTP = "http://92.255.107.65:8765"
+//    private val API_BASE_URL_HTTP = "http://192.168.0.103:18765"
 //    private val API_BASE_URL_WS = "ws://192.168.0.105:18765"
 
     object Menu {
@@ -71,5 +71,10 @@ object ApiEndpoint {
         fun getOwnWaiter() = "$API_BASE_URL_HTTP/$SOURCE_SERVICE/waiter/for-user/current/own-waiter"
         fun getLoggedInWaitersInSameStation() = "$API_BASE_URL_HTTP/$SOURCE_SERVICE/waiter/station/current/logged-in"
 //        fun editOwnEmployee() = "$API_BASE_URL_HTTP/$STATION_CONNECTOR/waiter/own"
+    }
+
+    object DataVersion {
+        fun getDataVersionsForCompany(companyId: String) =
+            "$API_BASE_URL_HTTP/$SOURCE_SERVICE/data-version/company/$companyId/list".encodeURLPath()
     }
 }

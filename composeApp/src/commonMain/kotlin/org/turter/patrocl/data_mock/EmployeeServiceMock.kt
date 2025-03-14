@@ -16,11 +16,11 @@ class EmployeeServiceMock : EmployeeService{
     private val _employeeStateFlow = MutableStateFlow(FetchState.success(DEFAULT_EMPLOYEE))
     private val _bindStatusStateFlow = MutableStateFlow<BindStatus>(BindStatus.Bind)
 
-    override fun getOwnEmployeeStateFlow(): StateFlow<FetchState<Employee>> =
-        _employeeStateFlow.asStateFlow()
-
-    override fun getOwnEmployeeBindStatusStateFlow(): StateFlow<BindStatus> =
-        _bindStatusStateFlow.asStateFlow()
+//    override fun getOwnEmployeeStateFlow(): StateFlow<FetchState<Employee>> =
+//        _employeeStateFlow.asStateFlow()
+//
+//    override fun getOwnEmployeeBindStatusStateFlow(): StateFlow<BindStatus> =
+//        _bindStatusStateFlow.asStateFlow()
 
     override suspend fun checkEmployee() {
         _bindStatusStateFlow.value = BindStatus.Loading

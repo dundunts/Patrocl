@@ -31,7 +31,7 @@ class ReadOrderViewModel(
 
     init {
         coroutineScope.launch {
-            orderService.getOrderFlow(orderGuid).collect { orderFetchState ->
+            orderService.openAndGetCurrentOrderFlow(orderGuid).collect { orderFetchState ->
                 log.d { "Read order screen: collect order flow: $orderFetchState"}
                 _screenState.value = if (orderFetchState is Finished) {
                     try {

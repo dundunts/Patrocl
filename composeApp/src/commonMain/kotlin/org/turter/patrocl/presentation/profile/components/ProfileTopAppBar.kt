@@ -17,7 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 @Composable
 fun ProfileTopAppBar(
     name: String,
-    positionTitle: String,
+//    positionTitle: String,
     onLogout: () -> Unit
 ) {
     TopAppBar(
@@ -28,10 +28,10 @@ fun ProfileTopAppBar(
                     fontSize = MaterialTheme.typography.titleLarge.fontSize,
                     fontWeight = FontWeight.SemiBold
                 )
-                Text(
-                    text = positionTitle,
-                    fontSize = MaterialTheme.typography.bodyLarge.fontSize
-                )
+//                Text(
+//                    text = positionTitle,
+//                    fontSize = MaterialTheme.typography.bodyLarge.fontSize
+//                )
             }
         },
         actions = {

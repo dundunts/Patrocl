@@ -54,7 +54,7 @@ class OrderServiceMock(
         initialValue = FetchState.initial()
     )
 
-    override fun getOrderFlow(guid: String): StateFlow<FetchState<Order>> =
+    override fun openAndGetCurrentOrderFlow(guid: String): StateFlow<FetchState<Order>> =
         orderFlow.asStateFlow()
 
     override fun getActiveOrdersStateFlow(): StateFlow<FetchState<List<OrderPreview>>> =

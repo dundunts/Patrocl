@@ -9,4 +9,13 @@ class CompanySourceDataVersionLocal: RealmObject {
     var companyId: String = ""
     var count: Long = 0
     var version: String = ""
+
+    override fun toString(): String {
+        return "CompanySourceDataVersionLocal(" +
+                "dataType='$dataType', " +
+                "companyId='$companyId', " +
+                "count=$count, " +
+                "version='$version'" +
+                ")"
+    }
 }

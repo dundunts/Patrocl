@@ -30,7 +30,11 @@ import cafe.adriel.voyager.navigator.tab.Tab
 import cafe.adriel.voyager.navigator.tab.TabNavigator
 import co.touchlab.kermit.Logger
 import org.turter.patrocl.presentation.components.CircularLoader
+import org.turter.patrocl.presentation.components.FullscreenLoader
+import org.turter.patrocl.presentation.error.ErrorComponent
+import org.turter.patrocl.presentation.error.ErrorType
 import org.turter.patrocl.presentation.main.components.MainErrorScreen
+import org.turter.patrocl.presentation.main.components.MainScreenLoader
 import org.turter.patrocl.presentation.main.components.SnackbarMessageHost
 import org.turter.patrocl.presentation.orders.list.OrdersScreen
 import org.turter.patrocl.presentation.stoplist.list.StopListScreen
@@ -50,31 +54,35 @@ class MainScreen : Screen {
         ) { state ->
             when (state) {
                 is MainScreenState.Content -> {
-
                     TabNavigator(tab = OrdersTab) {
                         Scaffold {
-//                            Box(
-//                                modifier = Modifier.padding(paddingValues)
-//                            ) {
-                                CurrentTab()
-                                SnackbarMessageHost(
-                                    messageState = state.messageState.collectAsState()
-                                )
-//                            }
+                            CurrentTab()
+                            SnackbarMessageHost(
+                                messageState = state.messageState.collectAsState()
+                            )
                         }
                     }
                 }
 
-                is MainScreenState.Error -> MainErrorScreen(
-                    errorType = state.errorType,
-                    onRetry = { vm.sendEvent(MainUiEvent.RefreshWaiter) }
+                is MainScreenState.CheckingData -> MainScreenLoader(supportingText = "Проверка актуальности версий данных")
+
+                is MainScreenState.UpdatingData -> MainScreenLoader(supportingText = "Обновление данных")
+
+                is MainScreenState.ActualizeDataError -> ErrorComponent(
+                    error = ErrorType.from(state.cause),
+                    onRetry = { vm.sendEvent(MainUiEvent.ActualizeData) }
                 )
 
-                else -> CircularLoader()
+//                is MainScreenState.Error -> MainErrorScreen(
+//                    errorType = state.errorType,
+////                    onRetry = { vm.sendEvent(MainUiEvent.RefreshWaiter) }
+//                    onRetry = {  }
+//                )
+
+                else -> FullscreenLoader()
             }
         }
     }
-
 
 
 }

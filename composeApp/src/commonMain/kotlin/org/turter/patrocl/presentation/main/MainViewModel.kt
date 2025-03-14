@@ -6,30 +6,35 @@ import co.touchlab.kermit.Logger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import org.turter.patrocl.domain.model.AuthState
+import org.turter.patrocl.domain.model.DataVersionsActualizerStatus
 import org.turter.patrocl.domain.model.FetchState
 import org.turter.patrocl.domain.service.AuthService
+import org.turter.patrocl.domain.service.DataVersionService
 import org.turter.patrocl.domain.service.MessageService
 import org.turter.patrocl.domain.service.WaiterService
 import org.turter.patrocl.presentation.error.ErrorType
 
 sealed class MainUiEvent {
-//    data object Login : MainUiEvent()
-    data object Logout : MainUiEvent()
-    data object RefreshWaiter : MainUiEvent()
+    //    data object Login : MainUiEvent()
+//    data object Logout : MainUiEvent()
+//    data object RefreshWaiter : MainUiEvent()
+    data object ActualizeData : MainUiEvent()
 }
 
 class MainViewModel(
     private val authService: AuthService,
     private val waiterService: WaiterService,
-    private val messageService: MessageService
+    private val messageService: MessageService,
+    private val dataVersionService: DataVersionService
 ) : ScreenModel {
     private val log = Logger.withTag("MainViewModel")
 
     private val coroutineScope = screenModelScope
 
-    val authStateFlow = authService.getAuthStateFlow()
+    private val authStateFlow = authService.getAuthStateFlow()
 
     private val _mainScreenState = MutableStateFlow<MainScreenState>(MainScreenState.Initial)
 
@@ -37,53 +42,74 @@ class MainViewModel(
 
     init {
         coroutineScope.launch {
-            waiterService.getOwnWaiterStateFlow().collect { waiterFetchState->
-                log.d { "Combine flows in init: \n" +
-                        "-Waiter: $waiterFetchState "}
-                _mainScreenState.value = when (waiterFetchState) {
-                    is FetchState.Finished -> {
-                        waiterFetchState.result.fold(
-                            onSuccess = { waiter ->
-                                MainScreenState.Content(
-                                    waiter = waiter,
-                                    messageState = messageService.getMessageStateFlow()
-                                )
-                            },
-                            onFailure = {
-                                MainScreenState.Error(ErrorType.from(it))
-                            }
-                        )
-                    }
+            dataVersionService.actualizeAndGetStatus().collect { status ->
+                log.d { "Actualizer data status: $status" }
+                _mainScreenState.value = when (status) {
+                    is DataVersionsActualizerStatus.Checking -> MainScreenState.CheckingData
+
+                    is DataVersionsActualizerStatus.Updating -> MainScreenState.UpdatingData
+
+                    is DataVersionsActualizerStatus.Error ->
+                        MainScreenState.ActualizeDataError(status.cause)
+
+                    is DataVersionsActualizerStatus.Completed ->
+                        MainScreenState.Content(messageState = messageService.getMessageStateFlow())
 
                     else -> MainScreenState.Loading
                 }
             }
+//            waiterService.getOwnWaiterStateFlow().collect { waiterFetchState->
+//                log.d { "Combine flows in init: \n" +
+//                        "-Waiter: $waiterFetchState "}
+//                _mainScreenState.value = when (waiterFetchState) {
+//                    is FetchState.Finished -> {
+//                        waiterFetchState.result.fold(
+//                            onSuccess = { waiter ->
+//                                MainScreenState.Content(
+//                                    waiter = waiter,
+//                                    messageState = messageService.getMessageStateFlow()
+//                                )
+//                            },
+//                            onFailure = {
+//                                MainScreenState.Error(ErrorType.from(it))
+//                            }
+//                        )
+//                    }
+//
+//                    else -> MainScreenState.Loading
+//                }
+//            }
         }
 
-        coroutineScope.launch {
-            log.d { "Launch collecting auth state to refresh waiter" }
-            authStateFlow.collect { authState ->
-                if (authState is AuthState.Authorized) {
-                    log.d { "Auth state is Authorized - call refresh waiter from collecting auth state" }
-                    waiterService.updateWaiterFromRemote()
-                }
-            }
-        }
+//        coroutineScope.launch {
+//            log.d { "Launch collecting auth state to refresh waiter" }
+//            authStateFlow.collect { authState ->
+//                if (authState is AuthState.Authorized) {
+//                    log.d { "Auth state is Authorized - call refresh waiter from collecting auth state" }
+//                    waiterService.updateWaiterFromRemote()
+//                }
+//            }
+//        }
     }
 
     fun sendEvent(event: MainUiEvent) {
         when (event) {
-            is MainUiEvent.Logout -> logout()
-            is MainUiEvent.RefreshWaiter -> refreshWaiter()
+            is MainUiEvent.ActualizeData -> actualizeData()
+//            is MainUiEvent.Logout -> logout()
+//            is MainUiEvent.RefreshWaiter -> refreshWaiter()
         }
     }
 
-    private fun logout() = coroutineScope.launch {
-        authService.logout()
+    private fun actualizeData() {
+        coroutineScope.launch { dataVersionService.actualize() }
     }
 
-    private fun refreshWaiter() = coroutineScope.launch {
-        waiterService.updateWaiterFromRemote()
-    }
+//    private fun logout() = coroutineScope.launch {
+//        authService.logout()
+//    }
+//
+//    private fun refreshWaiter() = coroutineScope.launch {
+//        waiterService.updateWaiterFromRemote()
+//    }
 
 }

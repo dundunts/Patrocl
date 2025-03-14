@@ -23,5 +23,4 @@ class CompanySourcesInfoLocal: RealmObject {
                 "defaultHallRkId='$defaultHallRkId'" +
                 ")"
     }
-
 }

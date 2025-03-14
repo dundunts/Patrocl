@@ -5,7 +5,6 @@ import io.realm.kotlin.ext.query
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import org.turter.patrocl.data.local.config.RealmManager
-import org.turter.patrocl.data.local.entity.menu.ModifiersGroupLocal
 import org.turter.patrocl.data.local.entity.menu.ModifiersSchemeDetailsLocal
 import org.turter.patrocl.data.local.entity.menu.ModifiersSchemeLocal
 import org.turter.patrocl.data.local.handleMultiResult
@@ -16,6 +15,20 @@ class ModifiersSchemeLocalRepositoryImpl : ModifiersSchemeLocalRepository {
     private val log = Logger.withTag("ModifiersSchemeLocalRepositoryImpl")
 
     private val realm = RealmManager.getRealm()
+
+    override fun count(): Long {
+        log.d { "Start counting" }
+        return realm.query<ModifiersSchemeLocal>()
+            .count()
+            .find()
+    }
+
+    override fun countDetails(): Long {
+        log.d { "Start counting details" }
+        return realm.query<ModifiersSchemeLocal>()
+            .find()
+            .sumOf { it.details.size.toLong() }
+    }
 
     override fun get(): Flow<Result<List<ModifiersSchemeLocal>>> = flow {
         log.d { "Start Entity getAll flow" }

@@ -3,12 +3,16 @@ package org.turter.patrocl.data.service
 import co.touchlab.kermit.Logger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.FlowCollector
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import org.turter.patrocl.data.dto.order.request.UpdateOrderInfoPayload
 import org.turter.patrocl.data.dto.order.response.OrdersListApiResponse
 import org.turter.patrocl.data.mapper.order.toAddItemsPayload
@@ -32,7 +36,7 @@ class OrderServiceImpl(
     private val orderApiClient: OrderApiClient,
     private val messageService: MessageService
 ) : OrderService {
-    private val log = Logger.withTag("OrderRepositoryImpl")
+    private val log = Logger.withTag("OrderServiceImpl")
 
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
@@ -40,65 +44,109 @@ class OrderServiceImpl(
 
     private val checkOrdersStateEvent = MutableSharedFlow<Unit>(replay = 1)
 
-    private val ordersStateFlow = flow<FetchState<List<OrderPreview>>> {
+    private val ordersStateFlow = channelFlow<FetchState<List<OrderPreview>>> {
         checkOrdersStateEvent.emit(Unit)
+
+        var activeJob: Job? = null
+
         checkOrdersStateEvent.collect {
-            emit(FetchState.loading())
-            try {
-                orderApiClient.getActiveOrdersFlow().collect { result ->
-                    val data = result.getOrThrow().let {
-                        if (it.status == OrdersListApiResponse.Status.ERROR) {
-                            Result.failure(RuntimeException(it.message))
-                        } else {
-                            Result.success(it.orders.toOrderList())
+            send(FetchState.loading())
+
+            activeJob?.cancel()
+
+            activeJob = coroutineScope.launch {
+                try {
+                    orderApiClient.getActiveOrdersFlow().collect { result ->
+                        val data = result.getOrThrow().let {
+                            if (it.status == OrdersListApiResponse.Status.ERROR) {
+                                Result.failure(RuntimeException(it.message))
+                            } else {
+                                Result.success(it.orders.toOrderList())
+                            }
+                        }
+                        send(FetchState.done(data))
+                        log.d { "Emit new orders flow: $data" }
+                    }
+                } catch (e: Exception) {
+                    log.e { "Catch exception while collecting orders flow. Exception: $e" }
+                    e.printStackTrace()
+                    send(FetchState.fail(e))
+                }
+            }
+        }
+    }.stateIn(
+        scope = coroutineScope,
+        started = SharingStarted.Lazily,
+        initialValue = FetchState.initial()
+    )
+
+    private val currentOrderFlow = MutableStateFlow<FetchState<Order>>(FetchState.initial())
+
+    init {
+        coroutineScope.launch {
+            log.d { "Start observing currentOrderFlow" }
+            checkCurrentOrderFlow.collect { actuator ->
+                when (actuator) {
+                    is OrderActuator.RefreshCurrent -> {
+                        log.d { "Collect RefreshCurrent - check is current order existed" }
+                        currentOrderFlow.value.takeIfSuccess()?.guid?.let { orderGuid ->
+                            log.d { "Collect RefreshCurrent - current order is existed, " +
+                                    "start fetching from remote" }
+                            fetchOrderFromApi(orderGuid)
                         }
                     }
-                    emit(FetchState.done(data))
-                    log.d { "Emit new orders flow: $data" }
-                }
-            } catch (e: Exception) {
-                log.e { "Catch exception while collecting orders flow. Exception: $e" }
-                e.printStackTrace()
-                emit(FetchState.fail(e))
-            }
-        }
-    }.stateIn(
-        scope = coroutineScope,
-        started = SharingStarted.Lazily,
-        initialValue = FetchState.initial()
-    )
 
-    override fun getOrderFlow(guid: String): StateFlow<FetchState<Order>> = flow {
-        log.d { "Creating new orders flow for order with guid: $guid" }
-        checkCurrentOrderFlow.emit(OrderActuator.Check)
-        checkCurrentOrderFlow.collect { actuator ->
-            when (actuator) {
-                is OrderActuator.Check -> {
-                    collectFetchOrderFromApi(guid)
-                }
+                    is OrderActuator.Load -> {
+                        log.d { "Collect Load - start fetching from remote" }
+                        fetchOrderFromApi(actuator.orderGuid)
+                    }
 
-                is OrderActuator.CheckFor -> {
-                    if (actuator.orderGuid == guid) collectFetchOrderFromApi(guid)
-                }
+                    is OrderActuator.CheckFor -> {
+                        log.d { "Collect CheckFor - check is target equal to current order" }
+                        currentOrderFlow.value.takeIfSuccess()?.guid?.let { orderGuid ->
+                            if (actuator.orderGuid == orderGuid) {
+                                log.d { "Collect CheckFor - target equals current, " +
+                                        "start fetching from remote" }
+                                fetchOrderFromApi(orderGuid)
+                            }
+                        }
+                    }
 
-                is OrderActuator.Update -> {
-                    val order = actuator.order
-                    if (order.guid == guid) emit(FetchState.success(order))
+                    is OrderActuator.Update -> {
+                        log.d { "Collect Update - check is target equal to current order" }
+                        val order = actuator.order
+                        currentOrderFlow.value.takeIfSuccess()?.guid?.let { orderGuid ->
+                            if (order.guid == orderGuid) {
+                                log.d { "Collect Update - target equals current, " +
+                                        "emit order value" }
+                                currentOrderFlow.value = FetchState.success(order)
+                            }
+                        }
+                    }
                 }
             }
         }
-    }.stateIn(
-        scope = coroutineScope,
-        started = SharingStarted.Lazily,
-        initialValue = FetchState.initial()
-    )
+    }
+
+    override fun openAndGetCurrentOrderFlow(guid: String): StateFlow<FetchState<Order>> {
+        log.d { "Send event to load new current order with guid: $guid" }
+        coroutineScope.launch { checkCurrentOrderFlow.emit(OrderActuator.Load(guid)) }
+        log.d { "Return currentOrderFlow" }
+        return currentOrderFlow.asStateFlow()
+    }
 
     override fun getActiveOrdersStateFlow(): StateFlow<FetchState<List<OrderPreview>>> =
         ordersStateFlow
 
     override suspend fun refreshOrders() = checkOrdersStateEvent.emit(Unit)
 
-    override suspend fun refreshCurrentOrder() = checkCurrentOrderFlow.emit(OrderActuator.Check)
+    override suspend fun refreshCurrentOrder() {
+        log.d { "Emit RefreshCurrent event to checkCurrentOrderFlow" }
+        checkCurrentOrderFlow.emit(OrderActuator.RefreshCurrent)
+    }
+
+//    override suspend fun refreshCurrentOrder() = checkCurrentOrderFlow.emit(OrderActuator.Check)
+
     override suspend fun createOrder(
         table: TableInfo,
         waiter: Waiter,
@@ -168,8 +216,10 @@ class OrderServiceImpl(
                 )
             },
             onFailure = { cause ->
-                log.e { "Failure removing items: ${payload.itemsForRemove.count()}. " +
-                        "Exception: $cause" }
+                log.e {
+                    "Failure removing items: ${payload.itemsForRemove.count()}. " +
+                            "Exception: $cause"
+                }
                 cause.printStackTrace()
                 messageService.setMessage(Message.error(cause))
             }
@@ -196,8 +246,9 @@ class OrderServiceImpl(
                 }
                 checkCurrentOrderFlow.emit(OrderActuator.Update(order))
                 messageService.setMessage(
-                    Message.success("Removing item: " +
-                            "${payload.flatMap { it.itemsForRemove }.count()} is successful"
+                    Message.success(
+                        "Removing item: " +
+                                "${payload.flatMap { it.itemsForRemove }.count()} is successful"
                     )
                 )
             },
@@ -218,13 +269,17 @@ class OrderServiceImpl(
         waiter: Waiter,
         table: TableInfo
     ): Result<Unit> {
-        log.d { "Start updating info(waiter = $waiter, table = $table) " +
-                "for order with guid: $orderGuid" }
-        return orderApiClient.updateOrderInfo(UpdateOrderInfoPayload(
-            orderGuid = orderGuid,
-            waiterCode = waiter.code,
-            tableCode = table.code
-        )).onSuccess {
+        log.d {
+            "Start updating info(waiter = $waiter, table = $table) " +
+                    "for order with guid: $orderGuid"
+        }
+        return orderApiClient.updateOrderInfo(
+            UpdateOrderInfoPayload(
+                orderGuid = orderGuid,
+                waiterCode = waiter.code,
+                tableCode = table.code
+            )
+        ).onSuccess {
             log.d { "Successful updating order info for order guid: $orderGuid" }
             log.d { "Emit update info order actuator" }
             checkCurrentOrderFlow.emit(OrderActuator.CheckFor(orderGuid))
@@ -236,29 +291,26 @@ class OrderServiceImpl(
         }
     }
 
-    private suspend fun FlowCollector<FetchState<Order>>.collectFetchOrderFromApi(
-        guid: String
-    ) {
-        emit(FetchState.loading())
-        log.d {
-            "Collect checkCurrentOrderFlow for order: $guid"
-        }
+    private suspend fun fetchOrderFromApi(guid: String) {
+        currentOrderFlow.emit(FetchState.loading())
+        log.d { "Collect checkCurrentOrderFlow for order: $guid" }
+
         val result = orderApiClient.getOrderByGuid(guid).map { it.toOrder() }
-        result.fold(
-            onSuccess = { order ->
-                log.d { "Get order by guid from api. Order name: ${order.name}" }
-            },
-            onFailure = { cause ->
-                log.e { "Catch exception while getting order by guid: $cause" }
-                messageService.setMessage(Message.error(cause))
-            }
-        )
+
+        result.onSuccess { order ->
+            log.d { "Get order by guid from api. Order name: ${order.name}" }
+        }.onFailure { cause ->
+            log.e { "Catch exception while getting order by guid: $cause" }
+            messageService.setMessage(Message.error(cause))
+        }
+
         log.d { "Emit result: $result" }
-        emit(FetchState.done(result))
+        currentOrderFlow.emit(FetchState.done(result))
     }
 
     private sealed class OrderActuator {
-        data object Check : OrderActuator()
+        data object RefreshCurrent : OrderActuator()
+        data class Load(val orderGuid: String) : OrderActuator()
         data class CheckFor(val orderGuid: String) : OrderActuator()
         data class Update(val order: Order) : OrderActuator()
     }

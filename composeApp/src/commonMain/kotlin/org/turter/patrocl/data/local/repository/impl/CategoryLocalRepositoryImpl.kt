@@ -6,7 +6,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import org.turter.patrocl.data.local.config.RealmManager
 import org.turter.patrocl.data.local.entity.menu.CategoryLocal
-import org.turter.patrocl.data.local.entity.menu.DishLocal
 import org.turter.patrocl.data.local.handleMultiResult
 import org.turter.patrocl.data.local.logFetchingEntityListWith
 import org.turter.patrocl.data.local.repository.CategoryLocalRepository
@@ -15,6 +14,13 @@ class CategoryLocalRepositoryImpl : CategoryLocalRepository {
     private val log = Logger.withTag("CategoryLocalRepositoryImpl")
 
     private val realm = RealmManager.getRealm()
+
+    override fun count(): Long {
+        log.d { "Start counting" }
+        return realm.query<CategoryLocal>()
+            .count()
+            .find()
+    }
 
     override fun get(): Flow<Result<List<CategoryLocal>>> = flow {
         log.d { "Start categories getAll flow" }

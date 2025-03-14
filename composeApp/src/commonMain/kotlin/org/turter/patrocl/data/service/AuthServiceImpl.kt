@@ -19,8 +19,9 @@ import org.publicvalue.multiplatform.oidc.tokenstore.removeTokens
 import org.publicvalue.multiplatform.oidc.tokenstore.tokensFlow
 import org.publicvalue.multiplatform.oidc.types.Jwt
 import org.turter.patrocl.data.auth.AppAuth
-import org.turter.patrocl.data.local.repository.OwnWaiterLocalRepository
-import org.turter.patrocl.data.local.repository.EmployeeLocalRepository
+import org.turter.patrocl.data.local.repository.impl.prefs.EmployeeRepositoryImpl
+import org.turter.patrocl.data.local.repository.impl.prefs.SourceDataPrefsImpl
+import org.turter.patrocl.data.local.repository.impl.prefs.WaiterRepositoryImpl
 import org.turter.patrocl.domain.exception.AuthorizeException
 import org.turter.patrocl.domain.exception.InvalidTokenException
 import org.turter.patrocl.domain.exception.InvalidUserFromTokenException
@@ -37,8 +38,9 @@ class AuthServiceImpl(
     private val appAuth: AppAuth,
     private val httpClient: HttpClient,
     private val tokenStore: TokenStore,
-    private val ownWaiterLocalRepository: OwnWaiterLocalRepository,
-    private val employeeRepository: EmployeeLocalRepository,
+    private val waiterRepository: WaiterRepositoryImpl,
+    private val employeeRepository: EmployeeRepositoryImpl,
+    private val sourceDataPrefs: SourceDataPrefsImpl,
     private val employeeService: EmployeeService,
     private val waiterService: WaiterService
 ) : AuthService {
@@ -185,8 +187,9 @@ class AuthServiceImpl(
                 log.d { "Clean up local tokens, waiter and employee" }
                 tokenStore.removeTokens()
                 httpClient.clearTokens()
-                ownWaiterLocalRepository.cleanUp()
-                employeeRepository.cleanUp()
+                waiterRepository.clear()
+                employeeRepository.clear()
+                sourceDataPrefs.clear()
                 log.d { "Logout is complete" }
                 return Result.success(Unit)
             }

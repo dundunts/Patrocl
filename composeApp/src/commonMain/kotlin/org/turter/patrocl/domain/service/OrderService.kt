@@ -10,7 +10,7 @@ import org.turter.patrocl.domain.model.person.Waiter
 import org.turter.patrocl.domain.model.order.RemoveOrderItemsSession
 
 interface OrderService {
-    fun getOrderFlow(guid: String): StateFlow<FetchState<Order>>
+    fun openAndGetCurrentOrderFlow(guid: String): StateFlow<FetchState<Order>>
     fun getActiveOrdersStateFlow(): StateFlow<FetchState<List<OrderPreview>>>
     suspend fun refreshOrders()
     suspend fun refreshCurrentOrder()

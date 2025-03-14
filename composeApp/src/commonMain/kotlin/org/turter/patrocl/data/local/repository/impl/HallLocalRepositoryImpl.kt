@@ -10,12 +10,18 @@ import org.turter.patrocl.data.local.entity.hall.TableLocal
 import org.turter.patrocl.data.local.handleMultiResult
 import org.turter.patrocl.data.local.logFetchingEntityListWith
 import org.turter.patrocl.data.local.repository.HallLocalRepository
-import org.turter.patrocl.domain.exception.EmptyLocalDataException
 
 class HallLocalRepositoryImpl : HallLocalRepository {
     private val log = Logger.withTag("HallLocalRepositoryImpl")
 
     private val realm = RealmManager.getRealm()
+
+    override fun count(): Long {
+        log.d { "Start counting" }
+        return realm.query<HallLocal>()
+            .count()
+            .find()
+    }
 
     override fun get(): Flow<Result<List<HallLocal>>> = flow {
         log.d { "Start Entity getAll flow" }

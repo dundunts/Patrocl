@@ -1,5 +1,6 @@
 package org.turter.patrocl.presentation.error
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -30,7 +31,8 @@ fun ErrorComponent(
 
     Box(
         modifier = Modifier.fillMaxSize()
-            .padding(paddingValues),
+            .padding(paddingValues)
+            .background(MaterialTheme.colorScheme.surfaceContainer),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -61,6 +63,7 @@ fun ErrorComponent(
 
                     Text(
                         text = errorAdvice,
+                        color = MaterialTheme.colorScheme.onSurface,
                         textAlign = TextAlign.Justify
                     )
                 }

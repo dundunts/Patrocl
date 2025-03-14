@@ -15,6 +15,13 @@ class ModifiersGroupLocalRepositoryImpl : ModifiersGroupLocalRepository {
 
     private val realm = RealmManager.getRealm()
 
+    override fun count(): Long {
+        log.d { "Start counting" }
+        return realm.query<ModifiersGroupLocal>()
+            .count()
+            .find()
+    }
+
     override fun get(): Flow<Result<List<ModifiersGroupLocal>>> = flow {
         log.d { "Start Entity getAll flow" }
         realm.query<ModifiersGroupLocal>()

@@ -17,7 +17,6 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import org.turter.patrocl.data.dto.enums.SourceDataType
 import org.turter.patrocl.data.dto.source.dataversion.CompanySourceDataVersion
 import org.turter.patrocl.data.local.repository.CompanySourceDataVersionLocalRepository
 import org.turter.patrocl.data.local.repository.ModifiersSchemeLocalRepository
@@ -33,6 +32,7 @@ import org.turter.patrocl.domain.model.DataStatus.Initial
 import org.turter.patrocl.domain.model.DataStatus.Loading
 import org.turter.patrocl.domain.model.DataStatus.Ready
 import org.turter.patrocl.domain.model.FetchState
+import org.turter.patrocl.domain.model.enums.SourceDataType
 import org.turter.patrocl.domain.model.menu.ModifierSchemeInfo
 
 class ModifiersSchemeFetcherImpl(
@@ -102,6 +102,14 @@ class ModifiersSchemeFetcherImpl(
 
     override fun getDataStatus(): StateFlow<DataStatus> = modifiersSchemesDataStatus.asStateFlow()
 
+    override fun getActualCount(): Long {
+        return modifiersSchemesRepository.count()
+    }
+
+    override fun getActualDetailsCount(): Long {
+        return modifiersSchemesRepository.countDetails()
+    }
+
     override suspend fun refresh() {
         refreshModifiersSchemesFlow.emit(Unit)
     }
@@ -124,20 +132,20 @@ class ModifiersSchemeFetcherImpl(
                         res.schemesVersion
                     ).toCompanySourceDataVersionLocal()
                 )
-                dataVersionRepository.updateVersion(
-                    CompanySourceDataVersion.forModifiersSchemeDetails(
-                        res.companyId,
-                        schemes.flatMap { it.details }.count().toLong(),
-                        res.schemesDetailsVersion
-                    ).toCompanySourceDataVersionLocal()
-                )
+//                dataVersionRepository.updateVersion(
+//                    CompanySourceDataVersion.forModifiersSchemeDetails(
+//                        res.companyId,
+//                        schemes.flatMap { it.details }.count().toLong(),
+//                        res.schemesDetailsVersion
+//                    ).toCompanySourceDataVersionLocal()
+//                )
                 modifiersSchemesDataStatus.emit(Ready)
             },
             onFailure = { cause ->
                 log.e { "Fail fetching modifiers from remote - start cleanup local data" }
                 modifiersSchemesRepository.cleanUp()
                 dataVersionRepository.deleteVersionFor(SourceDataType.COMPANY_MODIFIERS_SCHEMES)
-                dataVersionRepository.deleteVersionFor(SourceDataType.COMPANY_MODIFIERS_SCHEMES_DETAILS)
+//                dataVersionRepository.deleteVersionFor(SourceDataType.COMPANY_MODIFIERS_SCHEMES_DETAILS)
                 modifiersSchemesDataStatus.emit(Empty)
             }
         )

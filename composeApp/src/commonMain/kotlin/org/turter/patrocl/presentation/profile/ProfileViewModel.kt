@@ -54,19 +54,19 @@ class ProfileViewModel(
         coroutineScope.launch {
             combine(
                 waiterService.getOwnWaiterStateFlow(),
-                employeeService.getOwnEmployeeStateFlow(),
+//                employeeService.getOwnEmployeeStateFlow(),
                 menuService.getMenuTreeDataStatusStateFlow(),
                 hallFetcher.getDataStatus()
-            ) { waiter, employee, menuDataStatus, tablesDataStatus ->
+            ) { waiter, menuDataStatus, tablesDataStatus ->
                 log.d { "Waiter: $waiter" }
-                log.d { "Employee: $employee" }
+//                log.d { "Employee: $employee" }
                 log.d { "MenuDataStatus: $menuDataStatus" }
                 log.d { "TablesDataStatus: $tablesDataStatus" }
                 try {
-                    if (waiter is Finished && employee is Finished) {
+                    if (waiter is Finished) {
                         ProfileScreenState.Content(
                             waiter = waiter.result.getOrThrow(),
-                            employee = employee.result.getOrThrow(),
+//                            employee = employee.result.getOrThrow(),
                             isChangingCompany = false,
                             isUpdatingMenu = menuDataStatus is DataStatus.Loading,
                             isUpdatingTables = tablesDataStatus is DataStatus.Loading
@@ -111,17 +111,17 @@ class ProfileViewModel(
     }
 
     private fun confirmChangingPreferCompany() = execInContent {
-        val targetId = newPreferCompany?.id
-        if (targetId != null && targetId != employee.preferredCompanyId) {
-            isChangingCompany = true
-            coroutineScope.launch {
-                employeeService.changePreferCompany(targetId)
-                    .apply {
-                        closeChangePreferCompanyDialog()
-                        isChangingCompany = false
-                    }
-            }
-        }
+//        val targetId = newPreferCompany?.id
+//        if (targetId != null && targetId != employee.preferredCompanyId) {
+//            isChangingCompany = true
+//            coroutineScope.launch {
+//                employeeService.changePreferCompany(targetId)
+//                    .apply {
+//                        closeChangePreferCompanyDialog()
+//                        isChangingCompany = false
+//                    }
+//            }
+//        }
     }
 
     private fun updateMenuFromRemote() = execInContent {

@@ -100,6 +100,10 @@ class DishFetcherImpl(
 
     override fun getDataStatus(): StateFlow<DataStatus> = dishDataStatus.asStateFlow()
 
+    override fun getActualCount(): Long {
+        return dishRepository.count()
+    }
+
     override suspend fun refresh() {
         refreshDishesFlow.emit(Unit)
     }

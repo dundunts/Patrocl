@@ -5,7 +5,6 @@ import io.realm.kotlin.ext.query
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import org.turter.patrocl.data.local.config.RealmManager
-import org.turter.patrocl.data.local.entity.menu.ModifiersSchemeLocal
 import org.turter.patrocl.data.local.entity.voids.OrderItemVoidLocal
 import org.turter.patrocl.data.local.handleMultiResult
 import org.turter.patrocl.data.local.logFetchingEntityListWith
@@ -15,6 +14,13 @@ class OrderItemVoidLocalRepositoryImpl : OrderItemVoidLocalRepository {
     private val log = Logger.withTag("OrderItemVoidLocalRepositoryImpl")
 
     private val realm = RealmManager.getRealm()
+
+    override fun count(): Long {
+        log.d { "Start counting" }
+        return realm.query<OrderItemVoidLocal>()
+            .count()
+            .find()
+    }
 
     override fun get(): Flow<Result<List<OrderItemVoidLocal>>> = flow {
         log.d { "Start Entity getAll flow" }

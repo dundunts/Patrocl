@@ -35,7 +35,8 @@ val viewModelModule = module {
         MainViewModel(
             authService = get(),
             waiterService = get(),
-            messageService = get()
+            messageService = get(),
+            dataVersionService = get()
         )
     }
 

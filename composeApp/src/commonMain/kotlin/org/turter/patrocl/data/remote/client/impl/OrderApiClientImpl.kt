@@ -9,6 +9,8 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.serialization.json.Json
@@ -42,6 +44,8 @@ class OrderApiClientImpl(
 
     override suspend fun getActiveOrdersFlow(): Flow<Result<OrdersListApiResponse>> {
         return callbackFlow {
+            log.d { "Start orders flow sse" }
+
             try {
                 httpClient.sse(ApiEndpoint.Order.getOpenedOrdersListFlow()) {
                     incoming.collect { event ->
@@ -60,6 +64,15 @@ class OrderApiClientImpl(
             } catch (e: Exception) {
                 trySend(Result.failure(e))
                 close()
+            }
+
+//            invokeOnClose {
+//                log.d { "Closing orders sse flow" }
+//            }
+
+            awaitClose {
+                log.d { "Orders sse flow canceled by await close" }
+                cancel()
             }
         }
     }
@@ -97,6 +110,6 @@ class OrderApiClientImpl(
                 contentType(ContentType.Application.Json)
                 setBody(payload)
             } },
-            decoder = { Json.decodeFromString(it.body()) }
+            decoder = { }
         )
 }
