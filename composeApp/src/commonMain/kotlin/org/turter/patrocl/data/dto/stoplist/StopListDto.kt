@@ -11,6 +11,7 @@ data class StopListDto(
     enum class Status {
         SUCCESS,
         EMPTY,
-        ERROR
+        ERROR,
+        PING
     }
 }

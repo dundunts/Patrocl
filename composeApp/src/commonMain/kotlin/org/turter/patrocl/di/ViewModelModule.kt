@@ -31,12 +31,13 @@ val viewModelModule = module {
         )
     }
 
-    factory {
+    factory { (notAuthRedirect: () -> Unit) ->
         MainViewModel(
             authService = get(),
             waiterService = get(),
             messageService = get(),
-            dataVersionService = get()
+            dataVersionService = get(),
+            notAuthRedirect = notAuthRedirect
         )
     }
 

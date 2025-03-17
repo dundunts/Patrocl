@@ -11,6 +11,7 @@ data class OrdersListApiResponse(
     enum class Status {
         FILLED,
         EMPTY,
-        ERROR
+        ERROR,
+        PING
     }
 }

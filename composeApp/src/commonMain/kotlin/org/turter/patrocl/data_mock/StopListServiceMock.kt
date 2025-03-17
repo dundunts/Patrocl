@@ -46,7 +46,7 @@ class StopListServiceMock(
         initialValue = FetchState.initial()
     )
 
-    override fun getStopListStateFlow(): StateFlow<FetchState<StopList.Success>> =
+    override fun getStopListStateFlow(): StateFlow<FetchState<StopList>> =
         stopListFlow
 
     override suspend fun refreshStopList() {
@@ -60,7 +60,7 @@ class StopListServiceMock(
     }
 
     override suspend fun editItem(
-        id: String,
+        rkId: String,
         remainingCount: Int,
         until: LocalDateTime?
     ): Result<Unit> {

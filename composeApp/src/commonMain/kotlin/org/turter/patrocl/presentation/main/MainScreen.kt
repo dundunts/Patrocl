@@ -24,11 +24,16 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.CurrentTab
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.Tab
 import cafe.adriel.voyager.navigator.tab.TabNavigator
 import co.touchlab.kermit.Logger
+import org.koin.core.parameter.parametersOf
+import org.turter.patrocl.presentation.auth.WelcomeScreen
+import org.turter.patrocl.presentation.auth.redirectToAuth
 import org.turter.patrocl.presentation.components.CircularLoader
 import org.turter.patrocl.presentation.components.FullscreenLoader
 import org.turter.patrocl.presentation.error.ErrorComponent
@@ -42,7 +47,8 @@ import org.turter.patrocl.presentation.stoplist.list.StopListScreen
 class MainScreen : Screen {
     @Composable
     override fun Content() {
-        val vm: MainViewModel = koinScreenModel()
+        val navigator = LocalNavigator.currentOrThrow
+        val vm: MainViewModel = koinScreenModel{ parametersOf({ navigator.redirectToAuth() }) }
         val screenState by vm.mainScreenState.collectAsState()
 
         AnimatedContent(
@@ -79,7 +85,7 @@ class MainScreen : Screen {
 //                    onRetry = {  }
 //                )
 
-                else -> FullscreenLoader()
+                else -> MainScreenLoader(supportingText = "Загрузка")
             }
         }
     }

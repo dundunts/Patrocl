@@ -11,7 +11,7 @@ import kotlin.time.toDuration
 
 object StopListDataSupplier {
 
-    fun getStopList() = StopList.Success(
+    fun getStopList() = StopList(
         items = listOf(
             StopListItem(
                 id = "stop-list-item-id-1",
@@ -36,7 +36,7 @@ object StopListDataSupplier {
         )
     )
 
-    fun getStopListMutated() = StopList.Success(
+    fun getStopListMutated() = StopList(
         items = listOf(
             StopListItem(
                 id = "stop-list-item-id-2",

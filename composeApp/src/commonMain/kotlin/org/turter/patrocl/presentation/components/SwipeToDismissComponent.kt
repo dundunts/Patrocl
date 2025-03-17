@@ -45,7 +45,7 @@ fun SwipeToDismissComponent(
                 }
             }
         },
-        positionalThreshold = { it * 0.6f }
+//        positionalThreshold = { it * 0.6f }
     )
     
     SwipeToDismissBox(

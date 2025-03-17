@@ -24,6 +24,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.turter.patrocl.domain.model.person.Waiter
@@ -50,6 +51,8 @@ fun WaiterPickerDialog(
             icon = { Icon(imageVector = Person_apron, contentDescription = "Waiter icon") },
             label = "Выбор официанта",
             content = {
+                val focusManager = LocalFocusManager.current
+
                 Column(modifier = Modifier.fillMaxSize()) {
                     SearchTextField(
                         modifier = Modifier
@@ -78,13 +81,16 @@ fun WaiterPickerDialog(
                                 waiterName = waiter.name,
                                 onClick = {
                                     newSelectedWaiter = waiter
+                                    focusManager.clearFocus()
                                 }
                             )
                         }
                     }
                 }
             },
+            dismissLabel = "Назад",
             onDismiss = onDismiss,
+            confirmLabel = "Выбрать",
             onConfirm = {
                 onSelectWaiter(newSelectedWaiter)
                 onDismiss()

@@ -5,6 +5,8 @@ import org.turter.patrocl.domain.model.DataVersionsActualizerStatus
 
 interface DataVersionService {
 
+    fun getStatus(): StateFlow<DataVersionsActualizerStatus>
+
     fun actualizeAndGetStatus(): StateFlow<DataVersionsActualizerStatus>
 
     suspend fun actualize()

@@ -24,6 +24,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.turter.patrocl.domain.model.hall.TableInfo
@@ -50,6 +51,8 @@ fun TablePickerDialog(
             icon = { Icon(imageVector = Table_restaurant, contentDescription = "Table icon") },
             label = "Выбор стола",
             content = {
+                val focusManager = LocalFocusManager.current
+
                 Column(modifier = Modifier.fillMaxSize()) {
                     SearchTextField(
                         modifier = Modifier
@@ -78,13 +81,16 @@ fun TablePickerDialog(
                                 tableName = table.name,
                                 onClick = {
                                     newSelectedTable = table
+                                    focusManager.clearFocus()
                                 }
                             )
                         }
                     }
                 }
             },
+            dismissLabel = "Назад",
             onDismiss = onDismiss,
+            confirmLabel = "Выбрать",
             confirmEnabled = newSelectedTable != null,
             onConfirm = {
                 newSelectedTable?.let {

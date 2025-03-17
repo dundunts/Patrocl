@@ -8,13 +8,13 @@ import org.turter.patrocl.domain.model.stoplist.StopList
 
 interface StopListService {
 
-    fun getStopListStateFlow(): StateFlow<FetchState<StopList.Success>>
+    fun getStopListStateFlow(): StateFlow<FetchState<StopList>>
 
     suspend fun refreshStopList()
 
     suspend fun createNewItem(item: NewStopListItem): Result<Unit>
 
-    suspend fun editItem(id: String, remainingCount: Int, until: LocalDateTime?): Result<Unit>
+    suspend fun editItem(rkId: String, remainingCount: Int, until: LocalDateTime?): Result<Unit>
 
     suspend fun removeItem(id: String): Result<Unit>
 

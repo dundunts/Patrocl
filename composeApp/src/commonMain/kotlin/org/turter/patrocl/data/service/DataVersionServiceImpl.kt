@@ -52,6 +52,10 @@ class DataVersionServiceImpl(
         SourceDataType.COMPANY_ORDER_ITEM_VOIDS to orderItemVoidFetcher
     )
 
+    override fun getStatus(): StateFlow<DataVersionsActualizerStatus> {
+        return dataVersionActualizerStatusFlow.asStateFlow()
+    }
+
     override fun actualizeAndGetStatus(): StateFlow<DataVersionsActualizerStatus> {
         scope.launch { actualize() }
         return dataVersionActualizerStatusFlow.asStateFlow()

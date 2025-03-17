@@ -13,17 +13,17 @@ import org.turter.patrocl.di.initKoin
 
 class MainActivity : ComponentActivity() {
 
-    companion object {
-        @SuppressLint("StaticFieldLeak")
-        val codeAuthFlowFactory = AndroidCodeAuthFlowFactory(useWebView = true, webViewEpheremalSession = true)
-    }
+    val codeAuthFlowFactory = AndroidCodeAuthFlowFactory(
+        useWebView = true,
+        webViewEpheremalSession = true
+    )
 
     @OptIn(ExperimentalOpenIdConnect::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         codeAuthFlowFactory.registerActivity(this)
-        if(GlobalContext.getKoinApplicationOrNull() == null) {
+        if (GlobalContext.getKoinApplicationOrNull() == null) {
             initKoin(
                 authFlowFactory = codeAuthFlowFactory,
                 tokenStore = AndroidSettingsTokenStore(context = this)

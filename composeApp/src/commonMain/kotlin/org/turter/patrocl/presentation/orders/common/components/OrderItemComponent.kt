@@ -440,7 +440,8 @@ fun OrderItemsGroupsDivider(
                 modifier = Modifier.fillMaxWidth(),
                 text = title.uppercase(),
                 textAlign = TextAlign.Center,
-                fontSize = MaterialTheme.typography.titleMedium.fontSize
+                fontSize = MaterialTheme.typography.titleMedium.fontSize,
+                fontWeight = FontWeight.ExtraBold
             )
         }
         HorizontalDivider(thickness = 1.dp, color = contentColor)

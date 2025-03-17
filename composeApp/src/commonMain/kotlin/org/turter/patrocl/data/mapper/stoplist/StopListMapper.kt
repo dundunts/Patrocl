@@ -7,14 +7,16 @@ import org.turter.patrocl.domain.model.menu.StationDishInfo
 import org.turter.patrocl.domain.model.stoplist.StopList
 import org.turter.patrocl.domain.model.stoplist.StopListItem
 
-fun StopListDto.toStopList(dishes: List<StationDishInfo>) =
-    when(status) {
-        StopListDto.Status.SUCCESS, StopListDto.Status.EMPTY -> StopList.Success(
-            items = items.map { it.toStopListItem(dishes) }
-        )
-
-        StopListDto.Status.ERROR -> StopList.Error(message = message)
-    }
+fun StopListDto.toStopList(dishes: List<StationDishInfo>): StopList = StopList(
+    items = items.map { it.toStopListItem(dishes) }
+)
+//    when(status) {
+//        StopListDto.Status.SUCCESS, StopListDto.Status.EMPTY -> StopList.Success(
+//            items = items.map { it.toStopListItem(dishes) }
+//        )
+//
+//        StopListDto.Status.ERROR -> StopList.Error(message = message)
+//    }
 
 fun StopListItemDto.toStopListItem(dishes: List<StationDishInfo>) = StopListItem(
     id = id,

@@ -3,7 +3,6 @@ package org.turter.patrocl.data.remote.client.impl
 import co.touchlab.kermit.Logger
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
-import io.ktor.client.plugins.sse.SSEClientException
 import io.ktor.client.plugins.sse.sse
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
@@ -11,6 +10,8 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.serialization.json.Json
@@ -35,37 +36,49 @@ class StopListApiClientImpl(
 
     override suspend fun getStopListFlow(): Flow<Result<StopListDto>> {
         return callbackFlow {
-            var flag = true
-            while (flag) {
+            log.d { "Start stop list flow sse" }
+//            var reconnectionCount = 0
+//
+//            while (maxReconnections < 0 || reconnectionCount <= maxReconnections) {
+//                if (reconnectionCount == 0) log.d { "Start try to connect" }
+//                else log.d { "Try reconnect: current tries = $reconnectionCount, " +
+//                        "max tries = $maxReconnections" }
                 try {
                     httpClient.sse(ApiEndpoint.StopList.getStopListFlow()) {
                         incoming.collect { event ->
                             log.d(event.toString())
                             val data = event.data
                             if (!data.isNullOrBlank()) {
-                                val result: Result<StopListDto> = try {
-                                    Result.success(Json.decodeFromString(data))
+                                try {
+                                    val stopList: StopListDto = Json.decodeFromString(data)
+                                    log.d { "Decoded stop list response status: ${stopList.status}" }
+                                    if (stopList.status != StopListDto.Status.PING) {
+                                        trySend(Result.success(stopList))
+                                    }
                                 } catch (e: Exception) {
-                                    Result.failure(e)
+                                    trySend(Result.failure(e))
                                 }
-                                log.d("Decoding result: $result")
-                                trySend(result)
                             }
                         }
                     }
                 } catch (e: Exception) {
-                    when (e) {
-                        is SSEClientException -> {
-                            log.e { "Catch exception in sse: ${e.message}" }
-                            log.d { "Reconnecting" }
-                        }
-
-                        else -> {
+//                    when (e) {
+//                        is SSEClientException -> {
+//                            log.e { "Catch exception in sse: ${e.message}" }
+//                            if (maxReconnections >= 0 && ++reconnectionCount > maxReconnections) close()
+//                        }
+//
+//                        else -> {
                             trySend(Result.failure(e))
                             close()
-                        }
-                    }
-                }
+//                        }
+//                    }
+//                }
+            }
+
+            awaitClose {
+                log.d { "Stop list sse flow canceled by await close" }
+                cancel()
             }
         }
     }

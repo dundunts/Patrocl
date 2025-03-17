@@ -37,10 +37,10 @@ fun DishPickerModal(
     stopList: List<StopListItem>,
     selectedDishId: String,
     onDismiss: () -> Unit,
-    onSelectDish: (id: String) -> Unit
+    onSelectDish: (rkId: String) -> Unit
 ) {
     var searchString by remember { mutableStateOf("") }
-    var newSelectedDishId by remember { mutableStateOf(selectedDishId) }
+    var newSelectedDishRkId by remember { mutableStateOf(selectedDishId) }
     val filteredDishes = dishes
         .filter {
             if (searchString.isNotEmpty()) it.name.contains(searchString, true) else true
@@ -72,19 +72,19 @@ fun DishPickerModal(
                 ) {
                     items(items = filteredDishes, key = { it.id }) { dish ->
                         DishPickerElement(
-                            selected = dish.id == newSelectedDishId,
+                            selected = dish.rkId == newSelectedDishRkId,
                             enabled = stopList.none { it.dishRkId == dish.id },
                             name = dish.name,
-                            onClick = { newSelectedDishId = dish.id }
+                            onClick = { newSelectedDishRkId = dish.rkId }
                         )
                     }
                 }
             }
         },
         onDismiss = onDismiss,
-        confirmEnabled = dishes.any { it.id == newSelectedDishId },
+        confirmEnabled = dishes.any { it.rkId == newSelectedDishRkId },
         onConfirm = {
-            newSelectedDishId.let {
+            newSelectedDishRkId.let {
                 onSelectDish(it)
                 onDismiss()
             }

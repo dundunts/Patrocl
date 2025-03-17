@@ -55,7 +55,7 @@ class EditStopListItemViewModel(
             coroutineScope.launch {
                 setSaving(true)
                 stopListService.editItem(
-                    id = originalItem.id,
+                    rkId = originalItem.dishRkId,
                     remainingCount = newRemainCount,
                     until = newUntil
                 ).onSuccess { action() }

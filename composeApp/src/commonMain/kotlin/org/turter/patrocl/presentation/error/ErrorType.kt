@@ -16,8 +16,8 @@ sealed class ErrorType {
     companion object Factory {
         fun from(throwable: Throwable) =
             when(val ex = throwable) {
-                is ApiHttpException, is SocketTimeoutException -> NetworkError
-                is WebSocketSessionCloseException -> WsCloseError
+//                is ApiHttpException, is SocketTimeoutException -> NetworkError
+//                is WebSocketSessionCloseException -> WsCloseError
 //                is WebSocketFailureException, is ProtocolException -> WsFailureError(cause = ex.cause)
                 else -> UnknownError(ex)
             }

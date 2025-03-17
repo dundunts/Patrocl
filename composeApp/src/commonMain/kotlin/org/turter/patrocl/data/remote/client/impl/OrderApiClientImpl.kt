@@ -27,7 +27,7 @@ import org.turter.patrocl.domain.model.order.OrderPreview
 
 class OrderApiClientImpl(
     private val httpClient: HttpClient
-): OrderApiClient {
+) : OrderApiClient {
     private val log = Logger.withTag("OrderApiClientImpl")
 
     override suspend fun getOrderByGuid(guid: String): Result<OrderDto> =
@@ -46,28 +46,51 @@ class OrderApiClientImpl(
         return callbackFlow {
             log.d { "Start orders flow sse" }
 
-            try {
-                httpClient.sse(ApiEndpoint.Order.getOpenedOrdersListFlow()) {
-                    incoming.collect { event ->
-                        log.d(event.toString())
-                        val data = event.data
-                        if (!data.isNullOrBlank()) {
-                            val result: Result<OrdersListApiResponse> = try {
-                                Result.success(Json.decodeFromString(data))
-                            } catch (e: Exception) {
-                                Result.failure(e)
+//            var reconnectionCount = 0
+//
+//            while (maxReconnectionTries < 0 || reconnectionCount <= maxReconnectionTries) {
+//                if (reconnectionCount == 0) log.d { "Start try to connect" }
+//                else {
+//                    delay(500)
+//                    log.d {
+//                        "Try reconnect: current tries = $reconnectionCount, " +
+//                                "max tries = $maxReconnectionTries"
+//                    }
+//                }
+                try {
+                    httpClient.sse(ApiEndpoint.Order.getOpenedOrdersListFlow()) {
+                        incoming.collect { event ->
+                            log.d(event.toString())
+                            val data = event.data
+                            if (!data.isNullOrBlank()) {
+                                try {
+                                    val ordersList: OrdersListApiResponse = Json.decodeFromString(data)
+                                    log.d { "Decoded orders list response status: ${ordersList.status}" }
+                                    if (ordersList.status != OrdersListApiResponse.Status.PING) {
+                                        trySend(Result.success(ordersList))
+                                    }
+                                } catch (e: Exception) {
+                                    trySend(Result.failure(e))
+                                }
                             }
-                            trySend(result)
                         }
                     }
+                } catch (e: Exception) {
+//                    when (e) {
+//                        is SSEClientException -> {
+//                            log.e { "Catch exception in sse: ${e.message}" }
+//                            if (maxReconnectionTries >= 0 && ++reconnectionCount > maxReconnectionTries) {
+//                                trySend(Result.failure(e))
+//                                close()
+//                            }
+//                        }
+//
+//                        else -> {
+                            trySend(Result.failure(e))
+                            close()
+//                        }
+//                    }
                 }
-            } catch (e: Exception) {
-                trySend(Result.failure(e))
-                close()
-            }
-
-//            invokeOnClose {
-//                log.d { "Closing orders sse flow" }
 //            }
 
             awaitClose {
@@ -79,37 +102,45 @@ class OrderApiClientImpl(
 
     override suspend fun createOrder(payload: CreateOrderPayload): Result<OrderDto> =
         proceedRequest(
-            action = { httpClient.post(ApiEndpoint.Order.createOrder()) {
-                contentType(ContentType.Application.Json)
-                setBody(payload)
-            } },
+            action = {
+                httpClient.post(ApiEndpoint.Order.createOrder()) {
+                    contentType(ContentType.Application.Json)
+                    setBody(payload)
+                }
+            },
             decoder = { Json.decodeFromString(it.body()) }
         )
 
     override suspend fun updateOrder(payload: OrderSessionPayload.AddDishes): Result<OrderDto> =
         proceedRequest(
-            action = { httpClient.post(ApiEndpoint.Order.addItemsToOrder()) {
-                contentType(ContentType.Application.Json)
-                setBody(payload)
-            } },
+            action = {
+                httpClient.post(ApiEndpoint.Order.addItemsToOrder()) {
+                    contentType(ContentType.Application.Json)
+                    setBody(payload)
+                }
+            },
             decoder = { Json.decodeFromString(it.body()) }
         )
 
     override suspend fun removeItem(payload: RemoveItemsFromOrderPayload): Result<OrderDto> =
         proceedRequest(
-            action = { httpClient.post(ApiEndpoint.Order.removeItemsFromOrder()) {
-                contentType(ContentType.Application.Json)
-                setBody(payload)
-            } },
+            action = {
+                httpClient.post(ApiEndpoint.Order.removeItemsFromOrder()) {
+                    contentType(ContentType.Application.Json)
+                    setBody(payload)
+                }
+            },
             decoder = { Json.decodeFromString(it.body()) }
         )
 
     override suspend fun updateOrderInfo(payload: UpdateOrderInfoPayload): Result<Unit> =
         proceedRequest(
-            action = { httpClient.post(ApiEndpoint.Order.updateOrderInfo()) {
-                contentType(ContentType.Application.Json)
-                setBody(payload)
-            } },
+            action = {
+                httpClient.post(ApiEndpoint.Order.updateOrderInfo()) {
+                    contentType(ContentType.Application.Json)
+                    setBody(payload)
+                }
+            },
             decoder = { }
         )
 }

@@ -33,3 +33,9 @@ fun Navigator.logout() {
     while (navigator.parent != null) navigator = navigator.parent!!
     navigator.replaceAll(LogoutCallback())
 }
+
+fun Navigator.redirectToAuth() {
+    var navigator = this
+    while (navigator.parent != null) navigator = navigator.parent!!
+    navigator.replaceAll(WelcomeScreen())
+}

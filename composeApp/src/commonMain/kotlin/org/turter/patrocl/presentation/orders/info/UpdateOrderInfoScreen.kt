@@ -24,6 +24,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -58,6 +59,8 @@ class UpdateOrderInfoScreen(
                 onSave,
                 { navigator.pop() })
         }
+
+        val focusManager = LocalFocusManager.current
 
         val state by vm.screenState.collectAsState()
         val info = state.info

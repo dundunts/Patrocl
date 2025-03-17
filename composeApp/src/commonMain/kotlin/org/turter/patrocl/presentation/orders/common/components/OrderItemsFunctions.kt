@@ -29,7 +29,7 @@ fun LazyListScope.newItems(
     }
     items(items = items, key = { it.uuid }) { orderItem ->
         SwipeToDismissWrapper(
-            modifier = Modifier.padding(vertical = 2.dp).animateItem(),
+            modifier = Modifier.animateItem(),
             onStartToEnd = {
                 commentInputOpen(orderItem.uuid)
                 false
@@ -83,7 +83,7 @@ fun LazyListScope.savedItems(
                 val itemIsSelected =
                     sessionIsSelected || itemIsSelected(selectedState, session, dish)
                 SavedOrderItemCard(
-                    modifier = Modifier.padding(vertical = 2.dp).animateItem(),
+                    modifier = Modifier.animateItem(),
                     item = dish,
                     enabled = true,
                     select = itemIsSelected,

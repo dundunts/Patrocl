@@ -2,6 +2,7 @@ package org.turter.patrocl.di
 
 import org.koin.dsl.module
 import org.turter.patrocl.data_mock.AuthServiceMock
+import org.turter.patrocl.data_mock.DataVersionServiceMock
 import org.turter.patrocl.data_mock.EmployeeServiceMock
 import org.turter.patrocl.data_mock.MenuServiceMock
 import org.turter.patrocl.data_mock.MessageServiceMock
@@ -14,6 +15,7 @@ import org.turter.patrocl.data_mock.fetcher.HallFetcherMock
 import org.turter.patrocl.domain.fetcher.DishFetcher
 import org.turter.patrocl.domain.fetcher.HallFetcher
 import org.turter.patrocl.domain.service.AuthService
+import org.turter.patrocl.domain.service.DataVersionService
 import org.turter.patrocl.domain.service.EmployeeService
 import org.turter.patrocl.domain.service.MenuService
 import org.turter.patrocl.domain.service.MessageService
@@ -25,6 +27,8 @@ import org.turter.patrocl.domain.service.WaiterService
 val dataMockModule = module {
 
     single<AuthService> { AuthServiceMock() }
+
+    single<DataVersionService> { DataVersionServiceMock() }
 
     single<EmployeeService> { EmployeeServiceMock() }
 

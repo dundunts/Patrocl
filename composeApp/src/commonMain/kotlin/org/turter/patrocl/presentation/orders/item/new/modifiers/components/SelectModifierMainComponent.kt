@@ -82,7 +82,7 @@ fun SelectModifierMainComponent(
         scheme.details.mapNotNull { details ->
             state.groupsRkIdMap[details.modifiersGroupRkId]
                 ?.let { group -> ModifierGroupPickStatus.of(itemModifiers, details, group).isOk }
-        }.reduce { acc, b -> acc && b }
+        }.takeIf { it.isNotEmpty() }?.reduce { acc, b -> acc && b }
     } ?: true
 
     Scaffold(

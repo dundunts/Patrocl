@@ -6,6 +6,7 @@ import co.touchlab.kermit.Logger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import org.turter.patrocl.domain.model.AuthState
@@ -28,19 +29,24 @@ class MainViewModel(
     private val authService: AuthService,
     private val waiterService: WaiterService,
     private val messageService: MessageService,
-    private val dataVersionService: DataVersionService
+    private val dataVersionService: DataVersionService,
+    private val notAuthRedirect: () -> Unit
 ) : ScreenModel {
     private val log = Logger.withTag("MainViewModel")
 
     private val coroutineScope = screenModelScope
-
-    private val authStateFlow = authService.getAuthStateFlow()
 
     private val _mainScreenState = MutableStateFlow<MainScreenState>(MainScreenState.Initial)
 
     val mainScreenState: StateFlow<MainScreenState> = _mainScreenState.asStateFlow()
 
     init {
+        coroutineScope.launch {
+            authService.getAuthStateFlow().collect { authState ->
+                if (authState is AuthState.NotAuthorized) notAuthRedirect()
+            }
+        }
+
         coroutineScope.launch {
             dataVersionService.actualizeAndGetStatus().collect { status ->
                 log.d { "Actualizer data status: $status" }
@@ -58,6 +64,44 @@ class MainViewModel(
                     else -> MainScreenState.Loading
                 }
             }
+
+//            combine(
+//                authService.getAuthStateFlow(),
+//                dataVersionService.getStatus()
+//            ) { authState, dataVersionsActualizerStatus ->
+//                log.d { "Combine auth flow: $authState and dataVersionStatus: $dataVersionsActualizerStatus" }
+//                when (authState) {
+//                    is AuthState.Authorized -> {
+//                        log.d { "Auth state is authorized, start actualize data" }
+//                        dataVersionService.actualize()
+//                        log.d { "Actualizer data status: $dataVersionsActualizerStatus" }
+//                        _mainScreenState.value = when (dataVersionsActualizerStatus) {
+//                            is DataVersionsActualizerStatus.Checking -> MainScreenState.CheckingData
+//
+//                            is DataVersionsActualizerStatus.Updating -> MainScreenState.UpdatingData
+//
+//                            is DataVersionsActualizerStatus.Error ->
+//                                MainScreenState.ActualizeDataError(dataVersionsActualizerStatus.cause)
+//
+//                            is DataVersionsActualizerStatus.Completed ->
+//                                MainScreenState.Content(messageState = messageService.getMessageStateFlow())
+//
+//                            else -> MainScreenState.Loading
+//                        }
+//                    }
+//
+//                    is AuthState.Loading, AuthState.Initial -> {
+//                        log.d { "Auth state is loading or initial - current screen state is loading" }
+//                        _mainScreenState.value = MainScreenState.Loading
+//                    }
+//
+//                    else -> {
+//                        log.d { "Auth state is not authorized - redirect to auth" }
+//                        notAuthRedirect()
+//                    }
+//                }
+//            }
+
 //            waiterService.getOwnWaiterStateFlow().collect { waiterFetchState->
 //                log.d { "Combine flows in init: \n" +
 //                        "-Waiter: $waiterFetchState "}

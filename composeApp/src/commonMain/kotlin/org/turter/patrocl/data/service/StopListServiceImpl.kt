@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.datetime.LocalDateTime
+import org.turter.patrocl.data.dto.stoplist.StopListDto
 import org.turter.patrocl.data.mapper.stoplist.toCreateStopListItemPayload
 import org.turter.patrocl.data.mapper.stoplist.toEditStopListItemPayload
 import org.turter.patrocl.data.mapper.stoplist.toStopList
@@ -35,7 +36,7 @@ class StopListServiceImpl(
 
     private val checkStopListFlow = MutableSharedFlow<Unit>(replay = 1)
 
-    private val stopListStateFlow = flow<FetchState<StopList.Success>> {
+    private val stopListStateFlow = flow<FetchState<StopList>> {
         checkStopListFlow.emit(Unit)
         combine(
             checkStopListFlow,
@@ -45,25 +46,15 @@ class StopListServiceImpl(
             log.d("Start stop list flow")
             try {
                 val stopList = stopListResult.getOrThrow()
+                if (stopList.status == StopListDto.Status.ERROR) {
+                    return@combine FetchState.fail(RuntimeException(stopList.message))
+                }
                 val dishes = dishesFetchState.takeIfSuccess()
                 log.d("Fetched resources for stop list: \n" +
                         " - stop list: $stopList \n" +
                         " - dishes: $dishes")
                 if (dishes != null) {
-                    stopList.toStopList(dishes).let { list ->
-                        when(list) {
-                            is StopList.Success -> {
-                                log.d("Return success fetch state of stop list: $list")
-                                FetchState.success(list)
-                            }
-                            is StopList.Error -> {
-                                log.d(
-                                    "Return fail fetch state of stop list - ${list.message}"
-                                )
-                                FetchState.fail(RuntimeException(list.message))
-                            }
-                        }
-                    }
+                    FetchState.success(stopList.toStopList(dishes))
                 } else {
                     log.d("Return loading fetch state of stop list")
                     FetchState.loading()
@@ -82,7 +73,7 @@ class StopListServiceImpl(
         initialValue = FetchState.initial()
     )
 
-    override fun getStopListStateFlow(): StateFlow<FetchState<StopList.Success>> =
+    override fun getStopListStateFlow(): StateFlow<FetchState<StopList>> =
         stopListStateFlow
 
     override suspend fun refreshStopList() {
@@ -106,13 +97,13 @@ class StopListServiceImpl(
     }
 
     override suspend fun editItem(
-        id: String,
+        rkId: String,
         remainingCount: Int,
         until: LocalDateTime?
     ): Result<Unit> {
         return stopListApiClient
             .editItem(payload = toEditStopListItemPayload(
-                id = id,
+                id = rkId,
                 remainingCount = remainingCount,
                 until = until
             ))

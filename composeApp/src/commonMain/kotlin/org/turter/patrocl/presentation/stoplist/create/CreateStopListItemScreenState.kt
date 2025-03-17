@@ -19,7 +19,7 @@ sealed class CreateStopListItemScreenState {
         val isCreating: Boolean = false
     ) : CreateStopListItemScreenState() {
         fun isDishNotInStopList(dishRkId: String) = items.none { it.dishRkId == dishRkId }
-        fun getSelectedDish() = dishes.find { it.id == selectedDishRkId }
+        fun getSelectedDish() = dishes.find { it.rkId == selectedDishRkId }
     }
 
     data class Error(
